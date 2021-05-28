@@ -29,6 +29,7 @@ def take_screen_shot():
     cv2.waitKey(0)
     return screen_shot
 
+
 def keylogger_listening():
 
     pass
