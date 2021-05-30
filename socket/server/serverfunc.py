@@ -25,6 +25,8 @@ def take_screen_shot():
     screen_shot = cv2.cvtColor(np.array(screen_shot), cv2.COLOR_RGB2BGR)
     # screem_shot_file = open('screen_shot_1.png', 'w')
     # f = open(os.path.join(os.path.dirname(__file__), 'screen_shot_1.jpg'), 'w')
+    cv2.imshow('screen_shot_1.png', screen_shot)
+    cv2.waitKey(0)
     return screen_shot
 
 
