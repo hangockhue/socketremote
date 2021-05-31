@@ -25,7 +25,7 @@ class Registry(QWidget):
         desktop_width = desktop_rect.width()
         desktop_height = desktop_rect.height()
 
-        width = int(desktop_width * 0.187)
+        width = int(desktop_width * 0.406)
         height = int(desktop_height * 0.167)
 
         self.setGeometry(
@@ -40,6 +40,7 @@ class Registry(QWidget):
         hbox1 = QHBoxLayout()
 
         self.path_edit = QLineEdit()
+        self.path_edit.setReadOnly(True)
 
         browser_button = QPushButton('Browser...')
         browser_button.clicked.connect(self.open_reg)
@@ -129,6 +130,19 @@ class Registry(QWidget):
             '.',
             "(*.reg)"
         )
+
+        if file_name:
+            self.path_edit.setText(file_name)
+
+            with open(file_name, "r+", encoding="utf-16") as f:
+                contents = f.readlines()
+                
+                text = ''
+                for content in contents:
+                    text += content
+
+                self.file_content.setText(text)
+            
 
     def typeGroupTextChanged(self, text):
         if text == 'Get value' or text == 'Delete value':
