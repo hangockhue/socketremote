@@ -63,6 +63,7 @@ class Home(QWidget):
         app_running_button = QPushButton('App Running')
         app_running_button.clicked.connect(self.open_app_running)
         shut_down_button = QPushButton('Tắt máy')
+        shut_down_button.clicked.connect(self.shutdown)
         screenshot_button = QPushButton('Chụp màn hình')
         screenshot_button.clicked.connect(self.open_screenshot)
         keystroke_button = QPushButton('Keystroke')
@@ -110,6 +111,8 @@ class Home(QWidget):
             msg.setText("Kết nối thất bại")
             msg.exec()
 
+    def shutdown(self):
+        pass
 
     def open_process_running(self):
         self.small = Process(self.socket)
@@ -121,7 +124,7 @@ class Home(QWidget):
         self.small = Keystroke()
 
     def open_registry(self):
-        self.small = Registry()
+        self.small = Registry(self.socket)
 
     def open_screenshot(self):
         self.small = Screenshot(self.socket)

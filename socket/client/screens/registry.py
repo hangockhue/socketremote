@@ -1,3 +1,4 @@
+from socket import socket
 from PyQt5.QtWidgets import (
     QApplication,
     QWidget,
@@ -13,8 +14,9 @@ from PyQt5.QtWidgets import (
 
 
 class Registry(QWidget):
-    def __init__(self):
+    def __init__(self, socket):
         super().__init__()
+        self.socket = socket
 
         self.initUI()
 
@@ -105,6 +107,7 @@ class Registry(QWidget):
         hbox4 = QHBoxLayout()
         
         send_button = QPushButton('Gởi')
+        send_button.clicked.connect(self.send)
         delete_button = QPushButton('Xóa')
 
         hbox4.addStretch()
@@ -142,7 +145,12 @@ class Registry(QWidget):
                     text += content
 
                 self.file_content.setText(text)
-            
+    
+    def send(self):
+        if self.type.currentText() == 'Get value':
+            self.socket.send(bytes('get_value`HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion`ProgramFilesDir', 'utf-8'))
+            data = self.socket.recv(2048).decode("utf-8")
+            self.notification.setText(data)
 
     def typeGroupTextChanged(self, text):
         if text == 'Get value' or text == 'Delete value':

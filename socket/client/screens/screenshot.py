@@ -9,8 +9,8 @@ from PyQt5.QtWidgets import (
     QFileDialog,
 )
 from PyQt5 import QtGui
+import pickle
 from PIL import Image, ImageQt
-import numpy as np
 
 
 class Screenshot(QWidget):
@@ -63,14 +63,11 @@ class Screenshot(QWidget):
     def take_picture(self):
         self.socket.send(bytes('take_screenshot', 'utf-8'))
         
-        data = self.socket.recv(2048)
+        data = self.socket.recv(2048).decode("utf-8")
 
-        image = np.array(data.decode("utf-8"))
+        print(eval(data))
 
-        image = Image.fromarray(image, mode='RGB')
-        qt_img = ImageQt.ImageQt(image)
-
-        self.image_label.setPixmap(QtGui.QPixmap.fromImage(qt_img))
+        # self.image_label.setPixmap(QtGui.QPixmap.fromImage(qt_img))
 
 
     def save(self):

@@ -9,7 +9,7 @@ import socket
 from PyQt5.QtWidgets import QApplication
 from multiprocessing import Process
 import serverfunc
-import numpy as np
+import pickle
 
 all_processes = []
 
@@ -19,18 +19,22 @@ def connectclient(tcpServer):
         (conn, (ip, port)) = tcpServer.accept()
 
         data = conn.recv(2048)
-        print(data)
-        if data == b"take_screenshot":
-            image_data =  serverfunc.take_screen_shot()
-            print(image_data.shape)
-            conn.send(bytes(np.array_str(image_data), "utf-8"))
-        if data == b"get_process":
-            data_process = serverfunc.get_process_running()
-            print(data_process)
-            conn.send(bytes(str(data_process), "utf-8"))
-        if data.find(b"kill_process") == 0:
 
+        data = data.decode("utf-8")
+
+        if data == "take_screenshot":
+            image_data =  serverfunc.take_screen_shot()
+            serialized_data = pickle.dumps(image_data, protocol=2)
+            conn.sendall(serialized_data)
+        if data == "get_process":
+            data_process = serverfunc.get_process_running()
+            conn.sendall(bytes(str(data_process), "utf-8"))
+        if "kill_process" in data:
             serverfunc.kill_process_running(int(data[13:]))
+        if "get_value" in data:
+            data = data.split("`")
+            result = serverfunc.get_value(data[1], data[2])
+            conn.send(bytes(result, "utf-8"))
 
 
 def runserver():

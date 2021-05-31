@@ -9,6 +9,8 @@ from PyQt5.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
 )
+import ast
+from .helper import recvall
 
 headers = [
     'name process',
@@ -90,22 +92,25 @@ class Process(QWidget):
     def select(self):
         self.table.clearContents()
         
-
-        data = [
-            [1,2,3],
-            [4,5,6]
-        ]
-        self.table.setRowCount(len(data))
-
-        column = 0
-        for index, record in enumerate(data):
-            for value in record:
-                item = QTableWidgetItem()
-                item.setText(str(value))
-                self.table.setItem(index, column, item)
-                column += 1
-        
         self.socket.send(bytes('get_process', 'utf-8'))
 
-        data = self.socket.recv(2048)
-        print(data)
+        result = recvall(self.socket, 4096)
+
+        print(result)
+
+        # result = ast.literal_eval(result)
+
+        # data = []
+
+        # for i in result:
+        #     data.append([i['name'], i['pid'], 1])
+
+        # self.table.setRowCount(len(data))
+
+        # column = 0
+        # for index, record in enumerate(data):
+        #     for value in record:
+        #         item = QTableWidgetItem()
+        #         item.setText(str(value))
+        #         self.table.setItem(index, column, item)
+        #         column += 1
