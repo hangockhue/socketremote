@@ -8,14 +8,18 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QFileDialog,
 )
+from PyQt5 import QtGui
+from PIL import Image, ImageQt
+import numpy as np
 
 
 class Screenshot(QWidget):
 
-    def __init__(self):
+    def __init__(self, socket):
         super().__init__()
 
         self.initUI()
+        self.socket = socket
 
 
     def initUI(self):
@@ -43,6 +47,7 @@ class Screenshot(QWidget):
         hbox1 = QHBoxLayout()
 
         take_picture_button = QPushButton('Chụp')
+        take_picture_button.clicked.connect(self.take_picture)
         save_button = QPushButton('Lưu')
         save_button.clicked.connect(self.save)
 
@@ -54,6 +59,19 @@ class Screenshot(QWidget):
 
         self.setLayout(vbox1)
         self.show()
+
+    def take_picture(self):
+        self.socket.send(bytes('take_screenshot', 'utf-8'))
+        
+        data = self.socket.recv(2048)
+
+        image = np.array(data.decode("utf-8"))
+
+        image = Image.fromarray(image, mode='RGB')
+        qt_img = ImageQt.ImageQt(image)
+
+        self.image_label.setPixmap(QtGui.QPixmap.fromImage(qt_img))
+
 
     def save(self):
         path = QFileDialog.getSaveFileName(

@@ -1,4 +1,5 @@
 import sys
+import socket
 from PyQt5.QtWidgets import (
     QApplication,
     QWidget,
@@ -23,6 +24,8 @@ class Home(QWidget):
         super().__init__()
 
         self.initUI()
+
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
     def initUI(self):
@@ -94,13 +97,22 @@ class Home(QWidget):
         self.show()
 
     def connect(self):
-        msg = QMessageBox()
-        msg.setWindowTitle("IP")
-        msg.setText(self.ip_line_edit.text())
-        msg.exec()
+        
+        try:
+            self.socket.connect((self.ip_line_edit.text(), 1234))
+            msg = QMessageBox()
+            msg.setWindowTitle("IP")
+            msg.setText("Kết nối thành công")
+            msg.exec()
+        except TimeoutError:
+            msg = QMessageBox()
+            msg.setWindowTitle("IP")
+            msg.setText("Kết nối thất bại")
+            msg.exec()
+
 
     def open_process_running(self):
-        self.small = Process()
+        self.small = Process(self.socket)
 
     def open_app_running(self):
         self.small = AppRunning()
@@ -112,7 +124,7 @@ class Home(QWidget):
         self.small = Registry()
 
     def open_screenshot(self):
-        self.small = Screenshot()
+        self.small = Screenshot(self.socket)
 
     def exit(self):
         sys.exit()

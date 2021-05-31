@@ -19,8 +19,10 @@ headers = [
 
 class Process(QWidget):
 
-    def __init__(self):
+    def __init__(self, socket):
         super().__init__()
+
+        self.socket = socket
 
         self.initUI()
 
@@ -75,7 +77,8 @@ class Process(QWidget):
     
     def kill(self):
         name, done = QInputDialog.getText(self, '', 'Nhập ID:')
-        print(name)
+
+        self.socket.send(bytes(f'kill_process_{name}', 'utf-8'))
 
     def start(self):
         name, done = QInputDialog.getText(self, '', 'Nhập tên:')
@@ -86,6 +89,7 @@ class Process(QWidget):
 
     def select(self):
         self.table.clearContents()
+        
 
         data = [
             [1,2,3],
@@ -100,3 +104,8 @@ class Process(QWidget):
                 item.setText(str(value))
                 self.table.setItem(index, column, item)
                 column += 1
+        
+        self.socket.send(bytes('get_process', 'utf-8'))
+
+        data = self.socket.recv(2048)
+        print(data)

@@ -7,6 +7,11 @@ name = "pypi"
 pyqt5 = "*"
 pyqt5-tools = "*"
 pyinstaller = "*"
+sockets = "*"
+opencv-python = "*"
+numpy = "*"
+opencv-contrib-python = "*"
+pillow = "*"
 
 [dev-packages]
 
