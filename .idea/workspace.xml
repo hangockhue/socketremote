@@ -2,11 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="14362c04-0b20-4c29-9810-39ff76bb694e" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/SocketRemote.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/SocketRemote.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/socket/server/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/socket/server/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/socket/server/serverfunc.py" beforeDir="false" afterPath="$PROJECT_DIR$/socket/server/serverfunc.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
