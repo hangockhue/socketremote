@@ -112,7 +112,7 @@ class Home(QWidget):
             msg.exec()
 
     def shutdown(self):
-        pass
+        self.socket.send(bytes('shutdown', 'utf-8'))
 
     def open_process_running(self):
         self.small = Process(self.socket)
@@ -121,7 +121,7 @@ class Home(QWidget):
         self.small = AppRunning()
 
     def open_keystroke(self):
-        self.small = Keystroke()
+        self.small = Keystroke(self.socket)
 
     def open_registry(self):
         self.small = Registry(self.socket)

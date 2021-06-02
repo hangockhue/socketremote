@@ -159,8 +159,9 @@ class Registry(QWidget):
             link = self.key_edit.text()
             name = self.name_edit.text()
             value = self.value_edit.text()
+            value_type = self.value_type.currentText()
 
-            self.socket.sendall(bytes(f'set_value`{link}`{name}`{value}', 'utf-8'))
+            self.socket.sendall(bytes(f'set_value`{link}`{name}`{value}`{value_type}', 'utf-8'))
             data = self.socket.recv(2048).decode("utf-8")
 
         elif self.type.currentText() == 'Delete value':

