@@ -9,21 +9,25 @@ import winreg
 import os
 
 
+
+def get_hkey(HKEY_NAME):
+    if HKEY_NAME == 'HKEY_LOCAL_MACHINE':
+        return winreg.HKEY_LOCAL_MACHINE
+    elif HKEY_NAME == 'HKEY_CLASSES_ROOT':
+        return winreg.HKEY_CLASSES_ROOT
+    elif HKEY_NAME == 'HKEY_CURRENT_USER':
+        return winreg.HKEY_CURRENT_USER
+    elif HKEY_NAME == 'HKEY_USERS':
+        return winreg.HKEY_USERS
+    else:
+        return winreg.HKEY_CURRENT_CONFIG
+
 def open_key(link):
     links = link.split("\\")
 
     HKEY_NAME = links.pop(0)
 
-    if HKEY_NAME == 'HKEY_LOCAL_MACHINE':
-        HKEY = winreg.HKEY_LOCAL_MACHINE
-    elif HKEY_NAME == 'HKEY_CLASSES_ROOT':
-        HKEY = winreg.HKEY_CLASSES_ROOT
-    elif HKEY_NAME == 'HKEY_CURRENT_USER':
-        HKEY = winreg.HKEY_CURRENT_USER
-    elif HKEY_NAME == 'HKEY_USERS':
-        HKEY = winreg.HKEY_USERS
-    else:
-        HKEY = winreg.HKEY_CURRENT_CONFIG
+    HKEY = get_hkey(HKEY_NAME)
 
     aReg = winreg.ConnectRegistry(None, HKEY)
 
@@ -54,9 +58,72 @@ def take_screen_shot():
 
 
 def get_value(link, name):
-    asubkey = open_key(link)
+    try:
+        asubkey = open_key(link)
+        return winreg.QueryValueEx(asubkey, name)[0]
+    except FileNotFoundError:
+        return ''
 
-    return winreg.QueryValueEx(asubkey, name)[0]
+def delete_value(link, name):
+    try:
+        asubkey = open_key(link)
+        winreg.DeleteValue(asubkey, name)
+        return "Xóa value thành công"
+    except FileNotFoundError:
+        return "Lỗi"
+
+def set_value(link, name, value, value_type):
+    if value_type == 'String':
+        value_type = winreg.REG_SZ
+    elif value_type == 'Binary':
+        value_type = winreg.REG_BINARY
+    elif value_type == 'DWORD':
+        value_type = winreg.REG_DWORD
+    elif value_type == 'QWORD':
+        value_type = winreg.REG_QWORD
+    elif value_type == 'Multi-String':
+        value_type = winreg.REG_MULTI_SZ
+    else:
+        value_type = winreg.REG_EXPAND_SZ
+    
+    try:
+        asubkey = open_key(link)
+
+        winreg.SetValueEx(asubkey, name, 0, value_type, value)
+
+        return "Sửa value thành công"
+    except:
+        return "Lỗi"
+
+def create_key(link):
+    links = link.split("\\")
+
+    HKEY_NAME = links.pop(0)
+
+    HKEY = get_hkey(HKEY_NAME)
+
+    aKey = "\\".join(links)
+
+    try:
+        winreg.CreateKey(HKEY, aKey)
+        return "Tạo Key thành công"
+    except:
+        return "Lỗi"
+
+def delete_key(link):
+    links = link.split("\\")
+
+    HKEY_NAME = links.pop(0)
+
+    HKEY = get_hkey(HKEY_NAME)
+
+    aKey = "\\".join(links)
+
+    try:
+        winreg.DeleteKey(HKEY, aKey)
+        return "Xóa Key thành công"
+    except:
+        return "Lỗi"
 
 
 def on_press(key):

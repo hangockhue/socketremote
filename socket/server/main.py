@@ -26,6 +26,8 @@ def connectclient(tcpServer):
 
         data = data.decode("utf-8")
 
+        print(data)
+
         if data == "take_screenshot":
             image_data = serverfunc.take_screen_shot()
             serialized_data = pickle.dumps(image_data, protocol=2)
@@ -38,6 +40,27 @@ def connectclient(tcpServer):
         if "get_value" in data:
             data = data.split("`")
             result = serverfunc.get_value(data[1], data[2])
+            conn.send(bytes(result, "utf-8"))
+        if "set_value" in data:
+            data = data.split("`")
+            result = serverfunc.set_value(
+                data[1],
+                data[2],
+                data[3],
+                data[4],
+            )
+            conn.send(bytes(result, "utf-8"))
+        if "delete_value" in data:
+            data = data.split("`")
+            result = serverfunc.delete_value(data[1], data[2])
+            conn.send(bytes(result, "utf-8"))
+        if "create_key" in data:
+            data = data.split("`")
+            result = serverfunc.create_key(data[1])
+            conn.send(bytes(result, "utf-8"))
+        if "delete_key" in data:
+            data = data.split("`")
+            result = serverfunc.delete_key(data[1])
             conn.send(bytes(result, "utf-8"))
         if data == "shutdown":
             serverfunc.shutdown_pc()
@@ -92,6 +115,7 @@ class Server(QWidget):
 
         self.initUI()
         self.tcpServer = None
+        self.start = False
 
     def initUI(self):
 
@@ -128,11 +152,14 @@ class Server(QWidget):
     def open_server(self):
         print("start server")
 
-        serverThread = Process(target=runserver)
-        serverThread.start()
+        if not self.start:
+            serverThread = Process(target=runserver)
+            serverThread.start()
 
-        global all_processes
-        all_processes.append(serverThread)
+            global all_processes
+            all_processes.append(serverThread)
+            
+            self.start = True
 
 
 

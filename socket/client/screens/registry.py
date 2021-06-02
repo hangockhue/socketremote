@@ -147,10 +147,42 @@ class Registry(QWidget):
                 self.file_content.setText(text)
     
     def send(self):
+
         if self.type.currentText() == 'Get value':
-            self.socket.send(bytes('get_value`HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion`ProgramFilesDir', 'utf-8'))
+            link = self.key_edit.text()
+            name = self.name_edit.text()
+
+            self.socket.sendall(bytes(f'get_value`{link}`{name}', 'utf-8'))
             data = self.socket.recv(2048).decode("utf-8")
-            self.notification.setText(data)
+
+        elif self.type.currentText() == 'Set value':
+            link = self.key_edit.text()
+            name = self.name_edit.text()
+            value = self.value_edit.text()
+
+            self.socket.sendall(bytes(f'set_value`{link}`{name}`{value}', 'utf-8'))
+            data = self.socket.recv(2048).decode("utf-8")
+
+        elif self.type.currentText() == 'Delete value':
+            link = self.key_edit.text()
+            name = self.name_edit.text()
+
+            self.socket.sendall(bytes(f'delete_value`{link}`{name}', 'utf-8'))
+            data = self.socket.recv(2048).decode("utf-8")
+
+        elif self.type.currentText() == 'Create key':
+            link = self.key_edit.text()
+
+            self.socket.sendall(bytes(f'create_key`{link}', 'utf-8'))
+            data = self.socket.recv(2048).decode("utf-8")
+
+        elif self.type.currentText() == 'Delete key':
+            link = self.key_edit.text()
+
+            self.socket.sendall(bytes(f'delete_key`{link}', 'utf-8'))
+            data = self.socket.recv(2048).decode("utf-8")
+
+        self.notification.setPlainText(data + "\n" + self.notification.toPlainText())
 
     def typeGroupTextChanged(self, text):
         if text == 'Get value' or text == 'Delete value':
