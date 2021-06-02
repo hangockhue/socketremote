@@ -28,7 +28,7 @@ def connectclient(conn):
 
         print(data)
 
-        if stop:
+        if stop or data == '':
             break
 
         if data == "take_screenshot":
