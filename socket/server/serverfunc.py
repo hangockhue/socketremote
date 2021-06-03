@@ -8,8 +8,7 @@ import subprocess
 import winreg
 import os
 import pyautogui
-
-
+import subprocess
 
 def get_hkey(HKEY_NAME):
     if HKEY_NAME == 'HKEY_LOCAL_MACHINE':
@@ -42,7 +41,7 @@ def get_process_running():
 
     for proc in psutil.process_iter(['pid', 'name']):
         application_running.append(proc.info)
-
+    print(application_running)
     return application_running
 
 
@@ -180,3 +179,44 @@ def get_key_log():
 def shutdown_pc():
     os.system("shutdown /s /t 1")
 
+# def get_app_running():
+#
+
+# import subprocess
+#
+# cmd = 'powershell "gps | where {$_.MainWindowTitle } | select Description,Id,Path'
+# proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+# for line in proc.stdout:
+#     print(line)
+def remove_space(string):
+    stop = 0
+    newstring = ""
+    for index, char in enumerate(string):
+        if char == " ":
+            stop = stop + 1
+        if stop == 2:
+            # print(newstring)
+            return newstring
+        newstring = newstring + char
+
+def get_application_running():
+    cmd = 'powershell "gps | where {$_.MainWindowTitle } | select Description,Id'
+    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    remove_top = 0
+    list_app = []
+    for line in proc.stdout:
+        if not line.decode()[0].isspace():
+            # print(line)
+            remove_top = remove_top + 1
+            if remove_top > 2:
+                list_app.append({remove_space(line.decode().rstrip()[:23]): line.decode().rstrip()[23:]})
+    print(list_app)
+
+
+
+# import subprocess
+# child = subprocess.Popen(['pgrep','program_name'], stdout=subprocess.PIPE, shell=True)
+# result = child.communicate()[0]
+# print(result)
+
+get_application_running()

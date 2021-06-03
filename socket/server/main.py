@@ -82,10 +82,13 @@ def connectclient(conn):
         if data == "get_key_log":
             result = serverfunc.get_key_log()
             conn.send(bytes(result, "utf-8"))
+        if data == "get_application_running":
+            data_application = serverfunc.get_application_running()
+            conn.sendall(bytes(str(data_application), "utf-8"))
 
 def runserver():
     TCP_IP = '127.0.0.1'
-    TCP_PORT = 1234
+    TCP_PORT = 8000
     BUFFER_SIZE = 20
     tcpServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
