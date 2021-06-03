@@ -8,9 +8,10 @@ from PyQt5.QtWidgets import (
     QHeaderView,
     QTableWidget,
     QTableWidgetItem,
+    QMessageBox,
 )
 import ast
-from .helper import recvall
+from .helper import recv_timeout
 
 headers = [
     'name process',
@@ -78,13 +79,39 @@ class Process(QWidget):
         self.show()
     
     def kill(self):
-        name, done = QInputDialog.getText(self, '', 'Nhập ID:')
+        name, _ = QInputDialog.getText(self, '', 'Nhập ID:')
 
-        self.socket.send(bytes(f'kill_process_{name}', 'utf-8'))
+        if name:
+            self.socket.send(bytes(f'kill_process_{name}', 'utf-8'))
+
+            data = self.socket.recv(2048).decode("utf-8")
+            
+            msg = QMessageBox()
+            msg.setWindowTitle("KILL")
+
+            if data == '1':
+                msg.setText("Xóa thành công")
+            else:
+                msg.setText("Xóa thất bại")
+
+            msg.exec()
 
     def start(self):
-        name, done = QInputDialog.getText(self, '', 'Nhập tên:')
-        print(name)
+        name, _ = QInputDialog.getText(self, '', 'Nhập tên:')
+        if name:
+            self.socket.send(bytes(f'open_process`{name}', 'utf-8'))
+
+            data = self.socket.recv(2048).decode("utf-8")
+
+            msg = QMessageBox()
+            msg.setWindowTitle("START")
+
+            if data == '1':
+                msg.setText("Mở thành công")
+            else:
+                msg.setText("Mở thất bại")
+
+            msg.exec()
 
     def delete(self):
         self.table.clearContents()
@@ -94,23 +121,29 @@ class Process(QWidget):
         
         self.socket.send(bytes('get_process', 'utf-8'))
 
-        result = recvall(self.socket, 4096)
+        result = recv_timeout(self.socket)
 
-        print(result)
+        result = ast.literal_eval(result)
 
-        # result = ast.literal_eval(result)
+        data = {}
 
-        # data = []
+        for i in result:
+            if i['name'] in data:
+                data[i['name']]['pid'] = data[i['name']]['pid'] + ',' + str(i['pid'])
+                data[i['name']]['count'] += 1
+            else:
+                data[i['name']] = {}
+                data[i['name']]['pid'] = str(i['pid'])
+                data[i['name']]['count'] = 1
 
-        # for i in result:
-        #     data.append([i['name'], i['pid'], 1])
+        self.table.setRowCount(len(data.keys()))
 
-        # self.table.setRowCount(len(data))
+        for index, key in enumerate(data.keys()):
+            column = 0
 
-        # column = 0
-        # for index, record in enumerate(data):
-        #     for value in record:
-        #         item = QTableWidgetItem()
-        #         item.setText(str(value))
-        #         self.table.setItem(index, column, item)
-        #         column += 1
+            record = [key, data[key]['pid'], data[key]['count']]
+            for value in record:
+                item = QTableWidgetItem()
+                item.setText(str(value))
+                self.table.setItem(index, column, item)
+                column += 1

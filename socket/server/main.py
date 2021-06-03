@@ -32,14 +32,22 @@ def connectclient(conn):
             break
 
         if data == "take_screenshot":
-            image_data = serverfunc.take_screen_shot()
-            serialized_data = pickle.dumps(image_data, protocol=2)
-            conn.sendall(serialized_data)
+            photo_to_send, size, width, height = serverfunc.take_screen_shot()
+            
+            conn.send(bytes(str(size), 'utf-8'))
+            conn.send(bytes(str(width), 'utf-8'))
+            conn.send(bytes(str(height), 'utf-8'))
+            conn.send(photo_to_send)
         if data == "get_process":
             data_process = serverfunc.get_process_running()
             conn.sendall(bytes(str(data_process), "utf-8"))
         if "kill_process" in data:
-            serverfunc.kill_process_running(int(data[13:]))
+            result = serverfunc.kill_process_running(int(data[13:]))
+            conn.send(bytes(result, "utf-8"))
+        if "open_process" in data:
+            data = data.split("`")
+            result = serverfunc.open_process(data[1])
+            conn.send(bytes(result, "utf-8"))
         if "get_value" in data:
             data = data.split("`")
             result = serverfunc.get_value(data[1], data[2])

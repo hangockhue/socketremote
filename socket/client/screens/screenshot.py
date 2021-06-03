@@ -9,8 +9,10 @@ from PyQt5.QtWidgets import (
     QFileDialog,
 )
 from PyQt5 import QtGui
+from .helper import recv_timeout
 import pickle
-from PIL import Image, ImageQt
+from PIL import Image
+from PIL.ImageQt import ImageQt
 
 
 class Screenshot(QWidget):
@@ -62,12 +64,20 @@ class Screenshot(QWidget):
 
     def take_picture(self):
         self.socket.send(bytes('take_screenshot', 'utf-8'))
-        
-        data = self.socket.recv(2048).decode("utf-8")
 
-        print(eval(data))
+        size = int(self.socket.recv(2048).decode('utf-8'))
+        width =  int(self.socket.recv(2048).decode('utf-8'))
+        height =  int(self.socket.recv(2048).decode('utf-8'))
 
-        # self.image_label.setPixmap(QtGui.QPixmap.fromImage(qt_img))
+        the_photo = self.socket.recv(size)
+
+        image = Image.frombytes("RGB", (width, height), the_photo)
+
+        image = ImageQt(image)
+
+        image = QtGui.QImage(image)
+
+        self.image_label.setPixmap(QtGui.QPixmap.fromImage(image))
 
 
     def save(self):

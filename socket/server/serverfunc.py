@@ -1,12 +1,13 @@
 import psutil
 import pyautogui
-import cv2
+from PIL import ImageGrab
 import numpy as np
 import os
 from pynput.keyboard import Listener, Key
-import logging
+import subprocess
 import winreg
 import os
+import pyautogui
 
 
 
@@ -46,15 +47,31 @@ def get_process_running():
 
 
 def kill_process_running(pid):
-    p = psutil.Process(pid)
-    p.kill()
+    try:
+        p = psutil.Process(pid)
+        p.kill()
+        return '1'
+    except:
+        return '0'
 
+def open_process(name):
+    DETACHED_PROCESS = 0x00000008
+
+    try:
+        subprocess.Popen([f'{name}.exe'], close_fds=True, creationflags=DETACHED_PROCESS)
+        return '1'
+    except:
+        return '0'
 
 def take_screen_shot():
-    screen_shot = pyautogui.screenshot()
-    screen_shot = cv2.cvtColor(np.array(screen_shot), cv2.COLOR_RGB2BGR)
+    img = ImageGrab.grab(bbox = None)
+
+    photo_to_send = img.tobytes()
+    size = len(photo_to_send)
+
+    width, height = pyautogui.size()
     
-    return screen_shot
+    return photo_to_send, size, width, height
 
 
 def get_value(link, name):
