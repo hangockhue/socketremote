@@ -65,24 +65,12 @@ class Screenshot(QWidget):
 
         size = int(self.socket.recv(10).decode('utf-8'))
 
-        print(size)
-
         self.socket.send(bytes('get_image', 'utf-8'))
 
         the_photo = self.socket.recv(size)
 
-        self.socket.send(bytes('get_screenshot_size', 'utf-8'))
-
-        size = self.socket.recv(2048).decode('utf-8')
-
-        # size = size.split(' ')
-
-
-        # width = int(size[0])
-        # height = int(size[1])
-
         try:
-            image = Image.frombytes("RGB", (1920, 1080), the_photo)
+            image = Image.frombytes("RGB", (3200, 1800), the_photo)
         except Exception as e:
             print(e)
             msg = QMessageBox()
@@ -91,7 +79,7 @@ class Screenshot(QWidget):
             msg.exec()
             return
 
-        self.image = image
+        self.image = image.resize((int(3200/3), int(1800/3)))
 
         qimage = ImageQt(self.image)
 

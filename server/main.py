@@ -33,9 +33,6 @@ def connectclient(conn):
         if data == "get_image":
             photo_to_send = serverfunc.get_image()
             conn.send(photo_to_send)
-        if data == "get_screenshot_size":
-            width, height = serverfunc.get_screenshot_size() 
-            conn.send(bytes(f'{width} {height}', 'utf-8'))
         if data == "get_process":
             data_process = serverfunc.get_process_running()
             conn.sendall(bytes(str(data_process), "utf-8"))
