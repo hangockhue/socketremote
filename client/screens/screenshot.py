@@ -63,7 +63,7 @@ class Screenshot(QWidget):
     def take_picture(self):
         self.socket.send(bytes('take_screenshot', 'utf-8'))
 
-        the_photo = recv_timeout(self.socket)
+        the_photo = bytes(recv_timeout(self.socket, 30), 'utf-8')
 
         try:
             image = Image.frombytes("RGB", (3200, 1800), the_photo)

