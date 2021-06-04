@@ -212,11 +212,61 @@ def get_application_running():
                 list_app.append({remove_space(line.decode().rstrip()[:23]): line.decode().rstrip()[23:]})
     print(list_app)
 
+def get_registry_log():
+    pass
 
+import re
+import io
+from configparser import ConfigParser
+import pandas as pd
 
-# import subprocess
-# child = subprocess.Popen(['pgrep','program_name'], stdout=subprocess.PIPE, shell=True)
-# result = child.communicate()[0]
-# print(result)
+def read_reg(filename, encoding='utf-16'):
+    with io.open(filename, encoding=encoding) as f:
+        data = f.read()
+    # get rid of non-section strings in the beginning of .reg file
+    data = re.sub(r'^[^\[]*\n', '', data, flags=re.S)
+    cfg = ConfigParser(strict=False)
+    # dirty hack for "disabling" case-insensitive keys in "configparser"
+    cfg.optionxform=str
+    cfg.read_string(data)
+    data = []
+    # iterate over sections and keys and generate `data` for pandas.DataFrame
+    for s in cfg.sections():
+        if not cfg[s]:
+            data.append([s, None, None, None])
+        for key in cfg[s]:
+            tp = val = None
+            if cfg[s][key]:
+                # take care of value type
+                if ':' in cfg[s][key]:
+                    tp, val = cfg[s][key].split(':')
+                else:
+                    val = cfg[s][key].replace('"', '').replace(r'\\\n', '')
+            data.append([s, key.replace('"', ''), tp, val])
+    df = pd.DataFrame(data, columns=['Path','Key','Type','Value'])
+    # make `hex` values "one-line"
+    df.loc[df.Type.notnull() & df.Type.str.contains(r'^hex'), 'Value'] = \
+        df.loc[df.Type.notnull() & df.Type.str.contains(r'^hex'), 'Value'].str.replace(r'\\\n','')
 
-#get_application_running()
+    data_of_log = []
+    index = df.index
+    number_of_rows = len(index)
+    for i in range(0, number_of_rows):
+        data_of_log.append({"Path": df.loc[i]["Path"], "Key": df.loc[i]["Key"], "Value": df.loc[i]["Path"],
+                            "Value-Type": df.loc[i]["Type"]})
+
+    return data_of_log
+
+# filename = 'www.reg'
+# df = read_reg(filename)
+# print(df)
+# print(df.loc[0]["Path"])
+
+# data_of_log = []
+# index = df.index
+# number_of_rows = len(index)
+# print(number_of_rows)
+# for i in range(0, number_of_rows-1):
+#     data_of_log.append({"Path": df.loc[i]["Path"], "Key": df.loc[i]["Key"], "Value": df.loc[i]["Path"], "Value-Type": df.loc[i]["Type"]})
+#
+# print(data_of_log)
