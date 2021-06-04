@@ -5,7 +5,10 @@ from pynput.keyboard import Listener
 import subprocess
 import winreg
 import os
-
+import re
+import io
+from configparser import ConfigParser
+import pandas as pd
 
 def get_hkey(HKEY_NAME):
     if HKEY_NAME == 'HKEY_LOCAL_MACHINE':
@@ -199,3 +202,45 @@ def get_application_running():
                 list_app.append(
                     {line.decode().rstrip()[:23].replace(' ', ''): line.decode().rstrip()[23:].replace(' ', '')})
     return list_app
+
+
+def read_reg(filename, encoding='utf-16'):
+    with io.open(filename, encoding=encoding) as f:
+        data = f.read()
+    # get rid of non-section strings in the beginning of .reg file
+    data = re.sub(r'^[^\[]*\n', '', data, flags=re.S)
+    cfg = ConfigParser(strict=False)
+    # dirty hack for "disabling" case-insensitive keys in "configparser"
+    cfg.optionxform=str
+    cfg.read_string(data)
+    data = []
+    # iterate over sections and keys and generate `data` for pandas.DataFrame
+    for s in cfg.sections():
+        if not cfg[s]:
+            data.append([s, None, None, None])
+        for key in cfg[s]:
+            tp = val = None
+            if cfg[s][key]:
+                # take care of value type
+                if ':' in cfg[s][key]:
+                    tp, val = cfg[s][key].split(':')
+                else:
+                    val = cfg[s][key].replace('"', '').replace(r'\\\n', '')
+            data.append([s, key.replace('"', ''), tp, val])
+    df = pd.DataFrame(data, columns=['Path','Key','Type','Value'])
+    # make `hex` values "one-line"
+    df.loc[df.Type.notnull() & df.Type.str.contains(r'^hex'), 'Value'] = \
+        df.loc[df.Type.notnull() & df.Type.str.contains(r'^hex'), 'Value'].str.replace(r'\\\n','')
+
+    data_of_log = []
+    index = df.index
+    number_of_rows = len(index)
+    for i in range(0, number_of_rows):
+        data_of_log.append({"Path": df.loc[i]["Path"], "Key": df.loc[i]["Key"], "Value": df.loc[i]["Path"],
+                            "Value-Type": df.loc[i]["Type"]})
+
+    return data_of_log
+
+# filedata = 'www.reg'
+# df = read_reg(filedata)
+# print(df)
