@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (
 from PyQt5 import QtGui
 from PIL import Image
 from PIL.ImageQt import ImageQt
+from .helper import recv_timeout
 
 
 class Screenshot(QWidget):
@@ -61,17 +62,24 @@ class Screenshot(QWidget):
 
     def take_picture(self):
         self.socket.send(bytes('take_screenshot', 'utf-8'))
-        size = int(self.socket.recv(28).decode('utf-8'))
 
-        self.socket.send(bytes('get_screenshot', 'utf-8'))
+        size = int(self.socket.recv(10).decode('utf-8'))
+
+        self.socket.send(bytes('get_image', 'utf-8'))
 
         the_photo = self.socket.recv(size)
-        width = int(self.socket.recv(10).decode('utf-8'))
-        height = int(self.socket.recv(10).decode('utf-8'))
+
+        self.socket.send(bytes('get_screenshot_size', 'utf-8'))
+
+        size = self.socket.recv(10).decode('utf-8').split(' ')
+
+        width = int(size[0])
+        height = int(size[1])
 
         try:
             image = Image.frombytes("RGB", (width, height), the_photo)
-        except:
+        except Exception as e:
+            print(e)
             msg = QMessageBox()
             msg.setWindowTitle("IP")
             msg.setText("Ảnh quá lớn, hãy thử lại")

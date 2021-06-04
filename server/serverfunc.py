@@ -74,17 +74,22 @@ def take_screen_shot():
 
     return size
 
-def get_screen_shot():
+def get_image():
+    global image
+
+    photo_to_send = image.tobytes()
+
+    return photo_to_send
+
+def get_screenshot_size():
     global image
 
     if image:
         width, height = image.size
 
-        photo_to_send = image.tobytes()
-
-        return photo_to_send, width, height
+        return width, height
     
-    return '0', '0', '0'
+    return 0, 0
 
 def get_value(link, name):
     try:
