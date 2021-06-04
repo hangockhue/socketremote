@@ -68,6 +68,10 @@ def take_screen_shot():
 
     image = ImageGrab.grab(bbox=None)
 
+    width, height = image.size
+
+    image = image.resize((int(width/3), int(height/3)))
+
     photo_to_send = image.tobytes()
 
     size = len(photo_to_send)
