@@ -27,6 +27,8 @@ class Home(QWidget):
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+        self.connected = False
+
 
     def initUI(self):
 
@@ -105,6 +107,8 @@ class Home(QWidget):
             msg.setWindowTitle("IP")
             msg.setText("Kết nối thành công")
             msg.exec()
+
+            self.connected = True
         except TimeoutError:
             msg = QMessageBox()
             msg.setWindowTitle("IP")
@@ -112,22 +116,58 @@ class Home(QWidget):
             msg.exec()
 
     def shutdown(self):
-        self.socket.send(bytes('shutdown', 'utf-8'))
+        if not self.connected:
+            msg = QMessageBox()
+            msg.setWindowTitle("IP")
+            msg.setText("Chưa kết nối")
+            msg.exec()
+        else: 
+            self.socket.send(bytes('shutdown', 'utf-8'))
 
     def open_process_running(self):
-        self.small = Process(self.socket)
+        if not self.connected:
+            msg = QMessageBox()
+            msg.setWindowTitle("IP")
+            msg.setText("Chưa kết nối")
+            msg.exec()
+        else: 
+            self.small = Process(self.socket)
 
     def open_app_running(self):
-        self.small = AppRunning(self.socket)
+        if not self.connected:
+            msg = QMessageBox()
+            msg.setWindowTitle("IP")
+            msg.setText("Chưa kết nối")
+            msg.exec()
+        else: 
+            self.small = AppRunning(self.socket)
 
     def open_keystroke(self):
-        self.small = Keystroke(self.socket)
+        if not self.connected:
+            msg = QMessageBox()
+            msg.setWindowTitle("IP")
+            msg.setText("Chưa kết nối")
+            msg.exec()
+        else: 
+            self.small = Keystroke(self.socket)
 
     def open_registry(self):
-        self.small = Registry(self.socket)
+        if not self.connected:
+            msg = QMessageBox()
+            msg.setWindowTitle("IP")
+            msg.setText("Chưa kết nối")
+            msg.exec()
+        else: 
+            self.small = Registry(self.socket)
 
     def open_screenshot(self):
-        self.small = Screenshot(self.socket)
+        if not self.connected:
+            msg = QMessageBox()
+            msg.setWindowTitle("IP")
+            msg.setText("Chưa kết nối")
+            msg.exec()
+        else: 
+            self.small = Screenshot(self.socket)
 
     def exit(self):
         sys.exit()

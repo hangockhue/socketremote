@@ -5,10 +5,7 @@ from pynput.keyboard import Listener
 import subprocess
 import winreg
 import os
-import re
-import io
-from configparser import ConfigParser
-import pandas as pd
+import struct
 
 def get_hkey(HKEY_NAME):
     if HKEY_NAME == 'HKEY_LOCAL_MACHINE':
@@ -42,7 +39,7 @@ def get_process_running():
 
     for proc in psutil.process_iter(['pid', 'name']):
         application_running.append(proc.info)
-    print(application_running)
+
     return application_running
 
 
@@ -138,6 +135,56 @@ def create_key(link):
         return "Lỗi"
 
 
+def set_value_file(link, name, value, value_type):
+    try:
+        if value_type == 'String':
+            value_type = winreg.REG_SZ
+        elif value_type == 'Binary':
+            value_type = winreg.REG_BINARY
+            value = struct.pack('<Q', int(value))
+        elif value_type == 'DWORD':
+            value = int(value)
+            value_type = winreg.REG_DWORD
+        elif value_type == 'QWORD':
+            values = value.replace("00","").split(",")
+            
+            value = ''
+            for i in values[::-1]:
+                if i:
+                    if i[0] == '0':
+                        i = i[1]
+                    value += i
+
+            value = int(value, 16)
+
+            value_type = winreg.REG_QWORD
+        elif value_type == 'Multi-String':
+            value = value.split(',')
+            value_type = winreg.REG_MULTI_SZ
+        else:
+            value_type = winreg.REG_EXPAND_SZ
+    except:
+        return '0'
+
+    try:
+        asubkey = open_key(link)
+    except Exception as e:
+        print(e)
+        a = create_key(link)
+        
+        if a == "Tạo Key thành công":
+            asubkey = open_key(link)
+        else:
+            return '0'
+    
+    try:
+        winreg.SetValueEx(asubkey, name, 0, value_type, value)
+    except Exception as e:
+        print(e)
+        return '0'
+        
+    return '1'
+
 def delete_key(link):
     links = link.split("\\")
 
@@ -187,7 +234,7 @@ def get_key_log():
 
 
 def shutdown_pc():
-    os.system("shutdown /s /t 1")
+    os.system("shutdown /s /t 100")
 
 
 def get_application_running():
@@ -202,45 +249,3 @@ def get_application_running():
                 list_app.append(
                     {line.decode().rstrip()[:23].replace(' ', ''): line.decode().rstrip()[23:].replace(' ', '')})
     return list_app
-
-
-def read_reg(filename, encoding='utf-16'):
-    with io.open(filename, encoding=encoding) as f:
-        data = f.read()
-    # get rid of non-section strings in the beginning of .reg file
-    data = re.sub(r'^[^\[]*\n', '', data, flags=re.S)
-    cfg = ConfigParser(strict=False)
-    # dirty hack for "disabling" case-insensitive keys in "configparser"
-    cfg.optionxform=str
-    cfg.read_string(data)
-    data = []
-    # iterate over sections and keys and generate `data` for pandas.DataFrame
-    for s in cfg.sections():
-        if not cfg[s]:
-            data.append([s, None, None, None])
-        for key in cfg[s]:
-            tp = val = None
-            if cfg[s][key]:
-                # take care of value type
-                if ':' in cfg[s][key]:
-                    tp, val = cfg[s][key].split(':')
-                else:
-                    val = cfg[s][key].replace('"', '').replace(r'\\\n', '')
-            data.append([s, key.replace('"', ''), tp, val])
-    df = pd.DataFrame(data, columns=['Path','Key','Type','Value'])
-    # make `hex` values "one-line"
-    df.loc[df.Type.notnull() & df.Type.str.contains(r'^hex'), 'Value'] = \
-        df.loc[df.Type.notnull() & df.Type.str.contains(r'^hex'), 'Value'].str.replace(r'\\\n','')
-
-    data_of_log = []
-    index = df.index
-    number_of_rows = len(index)
-    for i in range(0, number_of_rows):
-        data_of_log.append({"Path": df.loc[i]["Path"], "Key": df.loc[i]["Key"], "Value": df.loc[i]["Path"],
-                            "Value-Type": df.loc[i]["Type"]})
-
-    return data_of_log
-
-# filedata = 'www.reg'
-# df = read_reg(filedata)
-# print(df)

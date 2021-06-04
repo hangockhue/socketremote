@@ -10,17 +10,19 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem,
     QMessageBox,
 )
+
 import ast
 from .helper import recv_timeout
 
+
 headers = [
-    'name process',
-    'ID process',
-    'count process',
+    'Name Application',
+    'ID Application',
+    'count thread',
 ]
 
 
-class Process(QWidget):
+class AppRunning(QWidget):
 
     def __init__(self, socket):
         super().__init__()
@@ -75,12 +77,12 @@ class Process(QWidget):
         vbox1.addWidget(self.table)
 
         self.setLayout(vbox1)
-        self.setWindowTitle('Process')
+        self.setWindowTitle('List App')
         self.show()
     
     def kill(self):
         name, _ = QInputDialog.getText(self, '', 'Nhập ID:')
-
+        
         if name:
             self.socket.send(bytes(f'kill_process_{name}', 'utf-8'))
 
@@ -90,14 +92,15 @@ class Process(QWidget):
             msg.setWindowTitle("KILL")
 
             if data == '1':
-                msg.setText("Xóa thành công")
+                msg.setText("Kill thành công")
             else:
-                msg.setText("Xóa thất bại")
+                msg.setText("Không tìm thấy chương trình")
 
             msg.exec()
 
     def start(self):
         name, _ = QInputDialog.getText(self, '', 'Nhập tên:')
+        
         if name:
             self.socket.send(bytes(f'open_process`{name}', 'utf-8'))
 
@@ -115,11 +118,12 @@ class Process(QWidget):
 
     def delete(self):
         self.table.clearContents()
-
-    def select(self):
-        self.table.clearContents()
         
-        self.socket.send(bytes('get_process', 'utf-8'))
+    def select(self):
+        
+        self.table.clearContents()
+
+        self.socket.send(bytes('get_application_running', 'utf-8'))
 
         result = recv_timeout(self.socket)
 
@@ -127,14 +131,15 @@ class Process(QWidget):
 
         data = {}
 
-        for i in result:
-            if i['name'] in data:
-                data[i['name']]['pid'] = data[i['name']]['pid'] + ',' + str(i['pid'])
-                data[i['name']]['count'] += 1
+        for value in result:
+            key = list(value.keys())[0]
+            if key in data:
+                data[key]['pid'] = data[key]['pid'] + ',' + str(value[key])
+                data[key]['count'] += 1
             else:
-                data[i['name']] = {}
-                data[i['name']]['pid'] = str(i['pid'])
-                data[i['name']]['count'] = 1
+                data[key] = {}
+                data[key]['pid'] = str(value[key])
+                data[key]['count'] = 1
 
         self.table.setRowCount(len(data.keys()))
 

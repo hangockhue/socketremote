@@ -9,13 +9,20 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QFileDialog,
+    QMessageBox,
 )
+
+import re
+import io
+from configparser import ConfigParser
+import pandas as pd
 
 
 class Registry(QWidget):
     def __init__(self, socket):
         super().__init__()
         self.socket = socket
+        self.data_of_log = []
 
         self.initUI()
 
@@ -55,8 +62,10 @@ class Registry(QWidget):
         hbox2 = QHBoxLayout()
 
         self.file_content = QTextEdit()
+        self.file_content.setReadOnly(True)
 
         send_content_button = QPushButton('Gởi nội dung')
+        send_content_button.clicked.connect(self.send_file)
 
         hbox2.addWidget(self.file_content)
         hbox2.addWidget(send_content_button)
@@ -144,6 +153,86 @@ class Registry(QWidget):
                     text += content
 
                 self.file_content.setText(text)
+
+            with io.open(file_name, encoding='utf-16') as f:
+                data = f.read()
+
+                # get rid of non-section strings in the beginning of .reg file
+                data = re.sub(r'^[^\[]*\n', '', data, flags=re.S)
+                cfg = ConfigParser(strict=False)
+                # dirty hack for "disabling" case-insensitive keys in "configparser"
+                cfg.optionxform=str
+                cfg.read_string(data)
+                data = []
+                # iterate over sections and keys and generate `data` for pandas.DataFrame
+                for s in cfg.sections():
+                    if not cfg[s]:
+                        data.append([s, None, None, None])
+                    for key in cfg[s]:
+                        tp = val = None
+                        if cfg[s][key]:
+                            # take care of value type
+                            if ':' in cfg[s][key]:
+                                tp, val = cfg[s][key].split(':')
+                            else:
+                                val = cfg[s][key].replace('"', '').replace(r'\\\n', '')
+                        data.append([s, key.replace('"', ''), tp, val])
+                df = pd.DataFrame(data, columns=['Path','Key','Type','Value'])
+                # make `hex` values "one-line"
+                df.loc[df.Type.notnull() & df.Type.str.contains(r'^hex'), 'Value'] = \
+                    df.loc[df.Type.notnull() & df.Type.str.contains(r'^hex'), 'Value'].str.replace(r'\\\n','')
+
+                self.data_of_log = []
+                index = df.index
+                number_of_rows = len(index)
+
+                for i in range(0, number_of_rows):
+                    self.data_of_log.append(
+                        {
+                            "Link": df.loc[i]["Path"],
+                            "Name": df.loc[i]["Key"],
+                            "Value": df.loc[i]["Value"],
+                            "Value-Type": df.loc[i]["Type"]
+                        }
+                    )
+
+
+    def send_file(self):
+        for data in self.data_of_log:
+            link = data['Link']
+            name = data['Name']
+            value = data['Value']
+
+            if data['Value-Type'] is None:
+                value_type = 'String'
+            elif data['Value-Type'] == 'hex':
+                value_type = 'Binary'
+            elif data['Value-Type'] == 'dword':
+                value_type = 'DWORD'
+            elif data['Value-Type'] == 'hex(b)':
+                value_type = 'QWORD'
+            elif data['Value-Type'] == 'hex(7)':
+                value_type = 'Multi-String'
+            elif data['Value-Type'] == 'hex(2)':
+                value_type = 'Expandable String'
+
+            self.socket.sendall(bytes(f'send_file`{link}`{name}`{value}`{value_type}', 'utf-8'))
+            
+            result = self.socket.recv(2048).decode("utf-8")
+
+            if result == '1':
+                continue
+            else:
+                msg = QMessageBox()
+                msg.setWindowTitle("SEND FILE")
+                msg.setText("Gửi file thất bại")
+                msg.exec()
+                return
+
+        msg = QMessageBox()
+        msg.setWindowTitle("SEND FILE")
+        msg.setText("Gửi file thành công")
+        msg.exec()
     
     def send(self):
 

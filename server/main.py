@@ -24,8 +24,6 @@ def connectclient(conn):
 
         data = data.decode("utf-8")
 
-        print(data)
-
         if stop or data == '':
             break
 
@@ -53,6 +51,15 @@ def connectclient(conn):
         if "set_value" in data:
             data = data.split("`")
             result = serverfunc.set_value(
+                data[1],
+                data[2],
+                data[3],
+                data[4],
+            )
+            conn.send(bytes(result, "utf-8"))
+        if "send_file" in data:
+            data = data.split("`")
+            result = serverfunc.set_value_file(
                 data[1],
                 data[2],
                 data[3],
