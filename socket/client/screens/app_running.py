@@ -8,7 +8,12 @@ from PyQt5.QtWidgets import (
     QHeaderView,
     QTableWidget,
     QTableWidgetItem,
+    QMessageBox,
 )
+
+import ast
+from .helper import recv_timeout
+
 
 headers = [
     'Name Application',
@@ -19,8 +24,10 @@ headers = [
 
 class AppRunning(QWidget):
 
-    def __init__(self):
+    def __init__(self, socket):
         super().__init__()
+
+        self.socket = socket
 
         self.initUI()
 
@@ -74,27 +81,72 @@ class AppRunning(QWidget):
         self.show()
     
     def kill(self):
-        name, done = QInputDialog.getText(self, '', 'Nhập ID:')
-        print(name)
+        name, _ = QInputDialog.getText(self, '', 'Nhập ID:')
+        
+        if name:
+            self.socket.send(bytes(f'kill_process_{name}', 'utf-8'))
+
+            data = self.socket.recv(2048).decode("utf-8")
+            
+            msg = QMessageBox()
+            msg.setWindowTitle("KILL")
+
+            if data == '1':
+                msg.setText("Xóa thành công")
+            else:
+                msg.setText("Xóa thất bại")
+
+            msg.exec()
 
     def start(self):
-        name, done = QInputDialog.getText(self, '', 'Nhập tên:')
-        print(name)
+        name, _ = QInputDialog.getText(self, '', 'Nhập tên:')
+        
+        if name:
+            self.socket.send(bytes(f'open_process`{name}', 'utf-8'))
+
+            data = self.socket.recv(2048).decode("utf-8")
+
+            msg = QMessageBox()
+            msg.setWindowTitle("START")
+
+            if data == '1':
+                msg.setText("Mở thành công")
+            else:
+                msg.setText("Mở thất bại")
+
+            msg.exec()
 
     def delete(self):
         self.table.clearContents()
         
     def select(self):
+        
         self.table.clearContents()
 
-        data = [
-            [1,2,3],
-            [4,5,6]
-        ]
-        self.table.setRowCount(len(data))
+        self.socket.send(bytes('get_application_running', 'utf-8'))
 
-        column = 0
-        for index, record in enumerate(data):
+        result = recv_timeout(self.socket)
+
+        result = ast.literal_eval(result)
+
+        data = {}
+
+        for value in result:
+            key = list(value.keys())[0]
+            if key in data:
+                data[key]['pid'] = data[key]['pid'] + ',' + str(value[key])
+                data[key]['count'] += 1
+            else:
+                data[key] = {}
+                data[key]['pid'] = str(value[key])
+                data[key]['count'] = 1
+
+        self.table.setRowCount(len(data.keys()))
+
+        for index, key in enumerate(data.keys()):
+            column = 0
+
+            record = [key, data[key]['pid'], data[key]['count']]
             for value in record:
                 item = QTableWidgetItem()
                 item.setText(str(value))

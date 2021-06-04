@@ -1,4 +1,3 @@
-from socket import socket
 from PyQt5.QtWidgets import (
     QApplication,
     QWidget,

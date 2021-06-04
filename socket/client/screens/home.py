@@ -118,7 +118,7 @@ class Home(QWidget):
         self.small = Process(self.socket)
 
     def open_app_running(self):
-        self.small = AppRunning()
+        self.small = AppRunning(self.socket)
 
     def open_keystroke(self):
         self.small = Keystroke(self.socket)
