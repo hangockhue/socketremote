@@ -1,4 +1,3 @@
-import sys
 from PyQt5.QtWidgets import (
     QApplication,
     QWidget,
@@ -9,8 +8,7 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QMessageBox,
 )
-from PyQt5 import QtGui, QtCore
-import pickle
+from PyQt5 import QtGui
 from PIL import Image
 from PIL.ImageQt import ImageQt
 
