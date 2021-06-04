@@ -96,7 +96,7 @@ def connectclient(conn):
             conn.sendall(bytes(str(data_application), "utf-8"))
 
 def runserver():
-    TCP_IP = '127.0.0.1'
+    TCP_IP = socket.gethostname()
     TCP_PORT = 8000
     BUFFER_SIZE = 20
     tcpServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
