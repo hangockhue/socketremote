@@ -219,4 +219,4 @@ def get_application_running():
 # result = child.communicate()[0]
 # print(result)
 
-get_application_running()
+#get_application_running()

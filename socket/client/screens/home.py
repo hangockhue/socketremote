@@ -100,7 +100,7 @@ class Home(QWidget):
     def connect(self):
         
         try:
-            self.socket.connect((self.ip_line_edit.text(), 1234))
+            self.socket.connect((self.ip_line_edit.text(), 8000))
             msg = QMessageBox()
             msg.setWindowTitle("IP")
             msg.setText("Kết nối thành công")
