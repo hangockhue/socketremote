@@ -28,9 +28,10 @@ def connectclient(conn):
             break
 
         if data == "take_screenshot":
-            photo_to_send, size, width, height = serverfunc.take_screen_shot()
-            
+            size = serverfunc.take_screen_shot()
             conn.send(bytes(str(size), 'utf-8'))
+        if data == "get_screenshot":
+            photo_to_send, width, height = serverfunc.get_screen_shot() 
             conn.send(photo_to_send)
             conn.send(bytes(str(width), 'utf-8'))
             conn.send(bytes(str(height), 'utf-8'))

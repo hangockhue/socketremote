@@ -61,8 +61,10 @@ class Screenshot(QWidget):
 
     def take_picture(self):
         self.socket.send(bytes('take_screenshot', 'utf-8'))
+        size = int(self.socket.recv(28).decode('utf-8'))
 
-        size = int(self.socket.recv(10).decode('utf-8'))
+        self.socket.send(bytes('get_screenshot', 'utf-8'))
+
         the_photo = self.socket.recv(size)
         width = int(self.socket.recv(10).decode('utf-8'))
         height = int(self.socket.recv(10).decode('utf-8'))
