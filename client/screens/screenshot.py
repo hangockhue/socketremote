@@ -66,7 +66,7 @@ class Screenshot(QWidget):
         the_photo = bytes(recv_timeout(self.socket, 30), 'utf-8')
 
         try:
-            image = Image.frombytes("RGB", (3200, 1800), the_photo)
+            self.image = Image.frombytes("RGB", (320, 240), the_photo)
         except Exception as e:
             print(e)
             msg = QMessageBox()
@@ -74,8 +74,6 @@ class Screenshot(QWidget):
             msg.setText("Ảnh quá lớn, hãy thử lại")
             msg.exec()
             return
-
-        self.image = image.resize((int(3200/3), int(1800/3)))
 
         qimage = ImageQt(self.image)
 
