@@ -63,29 +63,25 @@ class Screenshot(QWidget):
     def take_picture(self):
         self.socket.send(bytes('take_screenshot', 'utf-8'))
 
-        the_photo = bytes(recv_timeout(self.socket, 30), 'utf-8')
+        size = int(self.socket.recv(2048).decode('utf-8'))
+        width =  int(self.socket.recv(2048).decode('utf-8'))
+        height =  int(self.socket.recv(2048).decode('utf-8'))
+
+        size = int(self.socket.recv(10).decode('utf-8'))
+        the_photo = self.socket.recv(size)
+        width = int(self.socket.recv(10).decode('utf-8'))
+        height = int(self.socket.recv(10).decode('utf-8'))
 
         try:
-            self.image = Image.frombytes("RGB", (320, 240), the_photo)
-        except Exception as e:
-            print(e)
+            image = Image.frombytes("RGB", (width, height), the_photo)
+        except:
             msg = QMessageBox()
             msg.setWindowTitle("IP")
             msg.setText("Ảnh quá lớn, hãy thử lại")
             msg.exec()
             return
 
-        qimage = ImageQt(self.image)
-
-        gui_image = QtGui.QImage(qimage)
-
-        pixmap = QtGui.QPixmap.fromImage(gui_image)
-
-        pixmap.detach()
-
-        self.image_label.setPixmap(pixmap)
-        
-        self.image_label.resize(pixmap.width(), pixmap.height())
+        self.image = image.resize((int(width/3), int(height/3)))
 
 
     def save(self):
