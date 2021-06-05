@@ -73,7 +73,7 @@ class Screenshot(QWidget):
         height = int(self.socket.recv(10).decode('utf-8'))
 
         try:
-            image = Image.frombytes("RGB", (width, height), the_photo)
+            self.image = Image.frombytes("RGB", (width, height), the_photo)
         except:
             msg = QMessageBox()
             msg.setWindowTitle("IP")
@@ -81,7 +81,19 @@ class Screenshot(QWidget):
             msg.exec()
             return
 
-        self.image = image.resize((int(width/3), int(height/3)))
+        image = self.image.resize((int(width/3), int(height/3)))
+        
+        qimage = ImageQt(image)
+
+        gui_image = QtGui.QImage(qimage)
+
+        pixmap = QtGui.QPixmap.fromImage(gui_image)
+
+        pixmap.detach()
+
+        self.image_label.setPixmap(pixmap)
+
+        self.image_label.resize(pixmap.width(), pixmap.height())
 
 
     def save(self):
