@@ -1,5 +1,4 @@
-from PyQt5.QtWidgets import (
-    QApplication,
+from PyQt6.QtWidgets import (
     QWidget,
     QPushButton,
     QInputDialog,
@@ -11,6 +10,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
 )
 import ast
+import ctypes
 from .helper import recv_timeout
 
 headers = [
@@ -32,20 +32,16 @@ class Process(QWidget):
 
     def initUI(self):
 
-        desktop_rect = QApplication.desktop().screen().rect()
+        user32 = ctypes.windll.user32
 
-        desktop_width = desktop_rect.width()
-        desktop_height = desktop_rect.height()
+        desktop_width = user32.GetSystemMetrics(0)
+        desktop_height = user32.GetSystemMetrics(1)
 
         width = int(desktop_width * 0.187)
         height = int(desktop_height * 0.167)
 
-        self.setGeometry(
-            int(desktop_width / 2 - width / 2),
-            int(desktop_height / 2 - height / 2),
-            width,
-            height
-        )
+        self.setFixedWidth(width)
+        self.setFixedHeight(height)
 
         vbox1 = QVBoxLayout()
 
@@ -68,8 +64,8 @@ class Process(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
 
         vbox1.addLayout(hbox1)
         vbox1.addWidget(self.table)

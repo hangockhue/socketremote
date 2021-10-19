@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pyqt5 = "*"
-pyqt5-tools = "*"
+pyqt6 = "*"
+pyqt6-tools = "*"
 pyinstaller = "*"
 sockets = "*"
 pillow = "*"
@@ -13,6 +13,8 @@ pandas = "*"
 numpy = "*"
 psutil = "*"
 pynput = "*"
+opencv-python = "*"
+imutils = "*"
 
 [dev-packages]
 

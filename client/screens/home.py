@@ -1,7 +1,6 @@
 import sys
 import socket
-from PyQt5.QtWidgets import (
-    QApplication,
+from PyQt6.QtWidgets import (
     QWidget,
     QPushButton,
     QLineEdit,
@@ -10,12 +9,15 @@ from PyQt5.QtWidgets import (
     QGridLayout,
     QMessageBox,
 )
+import ctypes
 
 from .screenshot import Screenshot
 from .process import Process
 from .app_running import AppRunning
 from .keystroke import Keystroke
 from .registry import Registry
+from .video_streaming import streaming_video
+from .mac_address import show_mac_address
 
 
 class Home(QWidget):
@@ -32,20 +34,16 @@ class Home(QWidget):
 
     def initUI(self):
 
-        desktop_rect = QApplication.desktop().screen().rect()
+        user32 = ctypes.windll.user32
 
-        desktop_width = desktop_rect.width()
-        desktop_height = desktop_rect.height()
+        desktop_width = user32.GetSystemMetrics(0)
+        desktop_height = user32.GetSystemMetrics(1)
 
         width = int(desktop_width * 0.187)
         height = int(desktop_height * 0.167)
 
-        self.setGeometry(
-            int(desktop_width / 2 - width / 2),
-            int(desktop_height / 2 - height / 2),
-            width,
-            height
-        )
+        self.setFixedWidth(width)
+        self.setFixedHeight(height)
 
         vbox1 = QVBoxLayout()
 
@@ -72,6 +70,10 @@ class Home(QWidget):
         keystroke_button.clicked.connect(self.open_keystroke)
         edit_registry = QPushButton('Sửa Registry')
         edit_registry.clicked.connect(self.open_registry)
+        video_streaming_button = QPushButton('Xem live màn hình')
+        video_streaming_button.clicked.connect(self.streaming)
+        mac_getting_button = QPushButton('Xem địa chỉ Mac')
+        mac_getting_button.clicked.connect(self.get_mac_address)
         exit_button = QPushButton('Thoát')
         exit_button.clicked.connect(self.exit)
 
@@ -82,6 +84,8 @@ class Home(QWidget):
             screenshot_button,
             keystroke_button,
             edit_registry,
+            video_streaming_button,
+            mac_getting_button,
             '',
             exit_button,
         ]
@@ -116,59 +120,46 @@ class Home(QWidget):
             msg.setText("Kết nối thất bại")
             msg.exec()
 
-    def shutdown(self):
+    def check_connnected(self):
         if not self.connected:
             msg = QMessageBox()
             msg.setWindowTitle("IP")
             msg.setText("Chưa kết nối")
             msg.exec()
-        else: 
+            return False
+        return True
+
+    def shutdown(self):
+        if self.check_connnected():
             self.socket.send(bytes('shutdown', 'utf-8'))
 
     def open_process_running(self):
-        if not self.connected:
-            msg = QMessageBox()
-            msg.setWindowTitle("IP")
-            msg.setText("Chưa kết nối")
-            msg.exec()
-        else: 
+        if self.check_connnected():
             self.small = Process(self.socket)
 
     def open_app_running(self):
-        if not self.connected:
-            msg = QMessageBox()
-            msg.setWindowTitle("IP")
-            msg.setText("Chưa kết nối")
-            msg.exec()
-        else: 
+        if self.check_connnected():
             self.small = AppRunning(self.socket)
 
     def open_keystroke(self):
-        if not self.connected:
-            msg = QMessageBox()
-            msg.setWindowTitle("IP")
-            msg.setText("Chưa kết nối")
-            msg.exec()
-        else: 
+        if self.check_connnected():
             self.small = Keystroke(self.socket)
 
     def open_registry(self):
-        if not self.connected:
-            msg = QMessageBox()
-            msg.setWindowTitle("IP")
-            msg.setText("Chưa kết nối")
-            msg.exec()
-        else: 
+        if self.check_connnected():
             self.small = Registry(self.socket)
 
     def open_screenshot(self):
-        if not self.connected:
-            msg = QMessageBox()
-            msg.setWindowTitle("IP")
-            msg.setText("Chưa kết nối")
-            msg.exec()
-        else: 
+        if self.check_connnected():
             self.small = Screenshot(self.socket)
+
+    def streaming(self):
+        if self.check_connnected():
+            streaming_video(self.socket)
+
+    def get_mac_address(self):
+        if self.check_connnected():
+            show_mac_address(self.socket)
 
     def exit(self):
         sys.exit()

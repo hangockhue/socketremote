@@ -1,39 +1,59 @@
 import sys
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QApplication,
     QWidget,
     QPushButton,
     QVBoxLayout,
+    QMessageBox,
 )
 import socket
-from PyQt5.QtWidgets import QApplication
-from multiprocessing import Process
-import serverfunc
+from multiprocessing import Process, Value
 
+import serverfunc
+import ctypes
+import pickle
+import struct
+import cv2
 
 serverThread = None
 stop = False
-listener = None
 
+
+def video_stream(conn, streaming):
+    streaming.value = True
+
+    while streaming.value:
+        frame = serverfunc.take_screenshot()
+        _, frame = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
+        a = pickle.dumps(frame, 0)
+        message = struct.pack("Q", len(a)) + a
+        conn.sendall(message)
 
 def connectclient(conn):
     global stop
+    streaming = Value('b', False)
 
     while True:
-        data = conn.recv(2048)
+        if stop:
+            break
+
+        try:
+            data = conn.recv(2048)
+        except Exception:
+            break
 
         data = data.decode("utf-8")
 
-        if stop or data == '':
+        if data == '':
             break
 
         if data == "take_screenshot":
-            photo_to_send, size, width, height = serverfunc.take_screen_shot()
+            frame = serverfunc.take_screenshot()
             
-            conn.send(bytes(str(size), 'utf-8'))
-            conn.send(photo_to_send)
-            conn.send(bytes(str(width), 'utf-8'))
-            conn.send(bytes(str(height), 'utf-8'))
+            _, frame = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
+            a = pickle.dumps(frame, 0)
+            message = struct.pack("Q", len(a)) + a
+            conn.sendall(message)
         if data == "get_process":
             data_process = serverfunc.get_process_running()
             conn.sendall(bytes(str(data_process), "utf-8"))
@@ -94,19 +114,28 @@ def connectclient(conn):
         if data == "get_application_running":
             data_application = serverfunc.get_application_running()
             conn.sendall(bytes(str(data_application), "utf-8"))
+        if data == "start_streaming":
+            newthread = Process(target=video_stream, args=(conn, streaming))
+            newthread.start()
+        if data == "stop_streaming":
+            streaming.value = False
+        if data == "get_mac_address":
+            mac_address = serverfunc.get_mac_address()
+            conn.send(bytes(mac_address, "utf-8"))
 
 def runserver():
     TCP_IP = socket.gethostname()
     TCP_PORT = 8000
-    BUFFER_SIZE = 20
     tcpServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     tcpServer.bind((TCP_IP, TCP_PORT))
 
     tcpServer.listen(4)
+    print("Multithreaded Python server : Waiting for connections from TCP clients...")
+
     while True:
-        print("Multithreaded Python server : Waiting for connections from TCP clients...")
         client, _ = tcpServer.accept()
+        print("New client")
         newthread = Process(target=connectclient, args=(client,))
         newthread.start()
 
@@ -120,27 +149,22 @@ class Server(QWidget):
         self.start = False
 
     def initUI(self):
+        user32 = ctypes.windll.user32
 
-        desktop_rect = QApplication.desktop().screen().rect()
+        desktop_width = user32.GetSystemMetrics(0)
+        desktop_height = user32.GetSystemMetrics(1)
 
-        desktop_width = desktop_rect.width()
-        desktop_height = desktop_rect.height()
+        width = int(desktop_width * 0.056)
+        height = int(desktop_height * 0.107)
 
-        width = int(desktop_width * 0.156)
-        height = int(desktop_height * 0.167)
-
-        self.setGeometry(
-            int(desktop_width / 2 - width / 2),
-            int(desktop_height / 2 - height / 2),
-            width,
-            height
-        )
+        self.setFixedWidth(width)
+        self.setFixedHeight(height)
 
         self.setWindowTitle('Server')
 
         layout = QVBoxLayout()
 
-        open_button = QPushButton("Mở Server")
+        open_button = QPushButton("Mở Server", self)
         open_button.clicked.connect(self.open_server)
 
         layout.addStretch()
@@ -160,6 +184,10 @@ class Server(QWidget):
             serverThread.start()
             
             self.start = True
+            msg = QMessageBox()
+            msg.setWindowTitle("Thông báo")
+            msg.setText(f"Đã khởi động")
+            msg.exec()
 
 
 def off():
@@ -178,8 +206,7 @@ def main():
 
     app.aboutToQuit.connect(off)
 
-    sys.exit(app.exec_())
-
+    sys.exit(app.exec())
 
 if __name__ == '__main__':
     main()

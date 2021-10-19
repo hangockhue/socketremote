@@ -1,5 +1,4 @@
-from PyQt5.QtWidgets import (
-    QApplication,
+from PyQt6.QtWidgets import (
     QWidget,
     QPushButton,
     QLabel,
@@ -8,9 +7,13 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QMessageBox,
 )
-from PyQt5 import QtGui
+from PyQt6 import QtGui
 from PIL import Image
 from PIL.ImageQt import ImageQt
+import ctypes
+import struct
+import pickle
+import cv2
 from .helper import recv_timeout
 
 
@@ -25,21 +28,16 @@ class Screenshot(QWidget):
 
     def initUI(self):
 
-        desktop_rect = QApplication.desktop().screen().rect()
+        # user32 = ctypes.windll.user32
 
-        desktop_width = desktop_rect.width()
-        desktop_height = desktop_rect.height()
+        # desktop_width = user32.GetSystemMetrics(0)
+        # desktop_height = user32.GetSystemMetrics(1)
 
-        width = int(desktop_width * 0.563)
-        height = int(desktop_height * 0.5)
+        # width = int(desktop_width / 3)
+        # height = int(desktop_height / 5)
 
-        self.setGeometry(
-            int(desktop_width / 2 - width / 2),
-            int(desktop_height / 2 - height / 2),
-            width,
-            height
-        )
-
+        # self.setWidth(width)
+        # self.setHeight(height)
 
         vbox1 = QVBoxLayout()
         self.image_label = QLabel()
@@ -63,37 +61,38 @@ class Screenshot(QWidget):
     def take_picture(self):
         self.socket.send(bytes('take_screenshot', 'utf-8'))
 
-        size = int(self.socket.recv(2048).decode('utf-8'))
-        width =  int(self.socket.recv(2048).decode('utf-8'))
-        height =  int(self.socket.recv(2048).decode('utf-8'))
+        data = b""
+        payload_size = struct.calcsize("Q")
 
-        size = int(self.socket.recv(10).decode('utf-8'))
-        the_photo = self.socket.recv(size)
-        width = int(self.socket.recv(10).decode('utf-8'))
-        height = int(self.socket.recv(10).decode('utf-8'))
+        while len(data) < payload_size:
+            packet = self.socket.recv(4*1024)
+            if not packet: break
+            data += packet
 
-        try:
-            self.image = Image.frombytes("RGB", (width, height), the_photo)
-        except:
-            msg = QMessageBox()
-            msg.setWindowTitle("IP")
-            msg.setText("Ảnh quá lớn, hãy thử lại")
-            msg.exec()
-            return
+        packed_msg_size = data[:payload_size]
+        data = data[payload_size:]
+        msg_size = struct.unpack("Q",packed_msg_size)[0]
 
-        image = self.image.resize((int(width/3), int(height/3)))
-        
-        qimage = ImageQt(image)
+        while len(data) < msg_size:
+            data += self.socket.recv(4*1024)
 
-        gui_image = QtGui.QImage(qimage)
+        frame_data = data[:msg_size]
+        data  = data[msg_size:]
+        frame = pickle.loads(frame_data, fix_imports=True, encoding="bytes")
 
-        pixmap = QtGui.QPixmap.fromImage(gui_image)
+        frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
 
-        pixmap.detach()
+        height, width, _ = frame.shape
 
-        self.image_label.setPixmap(pixmap)
+        image = QtGui.QImage(frame, width, height, width * 3, QtGui.QImage.Format.Format_RGB888)
 
-        self.image_label.resize(pixmap.width(), pixmap.height())
+        self.pixmap = QtGui.QPixmap(image)
+
+        self.pixmap.detach()
+
+        self.image_label.setPixmap(self.pixmap)
+
+        self.image_label.resize(self.pixmap.width(), self.pixmap.height())
 
 
     def save(self):
@@ -106,7 +105,7 @@ class Screenshot(QWidget):
 
         if path:
             path = path.split(".")[0]
-            self.image.save(f"{path}.png")
+            self.pixmap.save(f"{path}.png")
             msg = QMessageBox()
             msg.setWindowTitle("IP")
             msg.setText("Lưu thành công")

@@ -1,5 +1,4 @@
-from PyQt5.QtWidgets import (
-    QApplication,
+from PyQt6.QtWidgets import (
     QWidget,
     QPushButton,
     QLineEdit,
@@ -12,6 +11,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
 )
 
+import ctypes
 import re
 import io
 from configparser import ConfigParser
@@ -28,20 +28,16 @@ class Registry(QWidget):
 
     def initUI(self):
 
-        desktop_rect = QApplication.desktop().screen().rect()
+        user32 = ctypes.windll.user32
 
-        desktop_width = desktop_rect.width()
-        desktop_height = desktop_rect.height()
+        desktop_width = user32.GetSystemMetrics(0)
+        desktop_height = user32.GetSystemMetrics(1)
 
         width = int(desktop_width * 0.406)
         height = int(desktop_height * 0.167)
 
-        self.setGeometry(
-            int(desktop_width / 2 - width / 2),
-            int(desktop_height / 2 - height / 2),
-            width,
-            height
-        )
+        self.setFixedWidth(width)
+        self.setFixedHeight(height)
 
         vbox1 = QVBoxLayout()
 
