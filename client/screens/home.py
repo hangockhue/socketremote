@@ -18,6 +18,7 @@ from .keystroke import Keystroke
 from .registry import Registry
 from .video_streaming import streaming_video
 from .mac_address import show_mac_address
+from .treeview import TreeViewScreen
 
 
 class Home(QWidget):
@@ -62,8 +63,10 @@ class Home(QWidget):
         process_running_button.clicked.connect(self.open_process_running)
         app_running_button = QPushButton('App Running')
         app_running_button.clicked.connect(self.open_app_running)
-        shut_down_button = QPushButton('Tắt máy')
-        shut_down_button.clicked.connect(self.shutdown)
+        shutdown_button = QPushButton('Tắt máy')
+        shutdown_button.clicked.connect(self.shutdown)
+        logout_button = QPushButton('Logout')
+        logout_button.clicked.connect(self.logout)
         screenshot_button = QPushButton('Chụp màn hình')
         screenshot_button.clicked.connect(self.open_screenshot)
         keystroke_button = QPushButton('Keystroke')
@@ -74,23 +77,32 @@ class Home(QWidget):
         video_streaming_button.clicked.connect(self.streaming)
         mac_getting_button = QPushButton('Xem địa chỉ Mac')
         mac_getting_button.clicked.connect(self.get_mac_address)
+        folder_tree_button = QPushButton('Xem Folder')
+        folder_tree_button.clicked.connect(self.show_folder_tree)
+
+        self.block_keyboard_button = QPushButton('Khoá bàn phím')
+        self.block_keyboard_button.clicked.connect(self.block_keyboard)
+        self.is_blocked_keyboard = False
+
         exit_button = QPushButton('Thoát')
         exit_button.clicked.connect(self.exit)
 
         items = [
             process_running_button,
             app_running_button,
-            shut_down_button,
+            shutdown_button,
+            logout_button,
             screenshot_button,
             keystroke_button,
             edit_registry,
             video_streaming_button,
             mac_getting_button,
-            '',
+            folder_tree_button,
+            self.block_keyboard_button,
             exit_button,
         ]
 
-        positions = [(i, j) for i in range(5) for j in range(2)]
+        positions = [(i, j) for i in range(6) for j in range(2)]
 
         grid = QGridLayout()
         for position, item in zip(positions, items):
@@ -112,8 +124,9 @@ class Home(QWidget):
             msg.setWindowTitle("IP")
             msg.setText("Kết nối thành công")
             msg.exec()
-
+            self.ip_line_edit.setReadOnly(True)
             self.connected = True
+            
         except TimeoutError:
             msg = QMessageBox()
             msg.setWindowTitle("IP")
@@ -132,6 +145,10 @@ class Home(QWidget):
     def shutdown(self):
         if self.check_connnected():
             self.socket.send(bytes('shutdown', 'utf-8'))
+
+    def logout(self):
+        if self.check_connnected():
+            self.socket.send(bytes('logout', 'utf-8'))
 
     def open_process_running(self):
         if self.check_connnected():
@@ -160,6 +177,21 @@ class Home(QWidget):
     def get_mac_address(self):
         if self.check_connnected():
             show_mac_address(self.socket)
+
+    def show_folder_tree(self):
+        if self.check_connnected():
+            self.small = TreeViewScreen(self.socket, self.ip_line_edit.text())
+
+    def block_keyboard(self):
+        if self.check_connnected():
+            if self.is_blocked_keyboard:
+                self.socket.send(bytes('unblock_keyboard', 'utf-8'))
+                self.block_keyboard_button.setText('Khoá bàn phím')
+            else:
+                self.socket.send(bytes('block_keyboard', 'utf-8'))
+                self.block_keyboard_button.setText('Mở khoá bàn phím')
+
+            self.is_blocked_keyboard = not self.is_blocked_keyboard
 
     def exit(self):
         sys.exit()

@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
 )
 import socket
 from multiprocessing import Process, Value
+from httpserver import run_http_server
 
 import serverfunc
 import ctypes
@@ -15,7 +16,8 @@ import pickle
 import struct
 import cv2
 
-serverThread = None
+server_thread = None
+http_server_thread = None
 stop = False
 
 
@@ -100,6 +102,8 @@ def connectclient(conn):
             conn.send(bytes(result, "utf-8"))
         if data == "shutdown":
             serverfunc.shutdown_pc()
+        if data == "logout":
+            serverfunc.logout_pc()
         if data == "key_log_listening":
             serverfunc.listening_keyboard(True)
         if data == "key_log_stop_listening":
@@ -122,6 +126,20 @@ def connectclient(conn):
         if data == "get_mac_address":
             mac_address = serverfunc.get_mac_address()
             conn.send(bytes(mac_address, "utf-8"))
+        if data == "block_keyboard":
+            serverfunc.set_block_keyboard(True)
+        if data == "unblock_keyboard":
+            serverfunc.set_block_keyboard(False)
+        if "copy_file" in data:
+            data = data.split("`")
+            result = serverfunc.send_file(data[1])
+            a = pickle.dumps(result, 0)
+            message = struct.pack("Q", len(a)) + a
+            conn.sendall(message)
+        if "delete_file" in data:
+            data = data.split("`")
+            result = serverfunc.remove_file(data[1])
+            conn.send(bytes(result, "utf-8"))
 
 def runserver():
     TCP_IP = socket.gethostname()
@@ -179,9 +197,13 @@ class Server(QWidget):
         print("start server")
 
         if not self.start:
-            global serverThread
-            serverThread = Process(target=runserver)
-            serverThread.start()
+            global server_thread
+            server_thread = Process(target=runserver)
+            server_thread.start()
+
+            global http_server_thread
+            http_server_thread = Process(target=run_http_server)
+            http_server_thread.start()
             
             self.start = True
             msg = QMessageBox()
@@ -191,11 +213,15 @@ class Server(QWidget):
 
 
 def off():
-    global serverThread
+    global server_thread
+    global http_server_thread
     global stop
     
-    if serverThread:
-        serverThread.terminate()
+    if server_thread:
+        server_thread.terminate()
+
+    if http_server_thread:
+        http_server_thread.terminate()
 
     serverfunc.listening_keyboard(False)
     stop = True

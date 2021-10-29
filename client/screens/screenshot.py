@@ -8,13 +8,9 @@ from PyQt6.QtWidgets import (
     QMessageBox,
 )
 from PyQt6 import QtGui
-from PIL import Image
-from PIL.ImageQt import ImageQt
-import ctypes
 import struct
 import pickle
 import cv2
-from .helper import recv_timeout
 
 
 class Screenshot(QWidget):
