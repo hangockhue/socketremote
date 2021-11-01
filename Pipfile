@@ -15,6 +15,7 @@ psutil = "*"
 pynput = "*"
 opencv-python = "*"
 imutils = "*"
+opencv-contrib-python = "*"
 
 [dev-packages]
 

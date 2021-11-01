@@ -88,17 +88,17 @@ class Home(QWidget):
         exit_button.clicked.connect(self.exit)
 
         items = [
-            process_running_button,
-            app_running_button,
+            keystroke_button,
+            self.block_keyboard_button,
+            video_streaming_button,
             shutdown_button,
             logout_button,
-            screenshot_button,
-            keystroke_button,
-            edit_registry,
-            video_streaming_button,
             mac_getting_button,
             folder_tree_button,
-            self.block_keyboard_button,
+            process_running_button,
+            app_running_button,
+            screenshot_button,
+            edit_registry,
             exit_button,
         ]
 

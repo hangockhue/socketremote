@@ -5,7 +5,6 @@ from serverfunc import get_volumes, list_folders
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        print(self.path)
         if self.path == "/":
             result = get_volumes()
         else:
@@ -19,5 +18,4 @@ class handler(BaseHTTPRequestHandler):
 
 def run_http_server():
     with HTTPServer(('', 8080), handler) as server:
-        print(123)
         server.serve_forever()

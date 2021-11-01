@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
 )
 import socket
-from multiprocessing import Process, Value
+from multiprocessing import Process, Value, freeze_support
 from httpserver import run_http_server
 
 import serverfunc
@@ -21,7 +21,7 @@ http_server_thread = None
 stop = False
 
 
-def video_stream(conn, streaming):
+def video_stream(conn: socket.socket, streaming: Value):
     streaming.value = True
 
     while streaming.value:
@@ -31,7 +31,7 @@ def video_stream(conn, streaming):
         message = struct.pack("Q", len(a)) + a
         conn.sendall(message)
 
-def connectclient(conn):
+def connectclient(conn: socket.socket):
     global stop
     streaming = Value('b', False)
 
@@ -142,7 +142,7 @@ def connectclient(conn):
             conn.send(bytes(result, "utf-8"))
 
 def runserver():
-    TCP_IP = socket.gethostname()
+    TCP_IP = socket.gethostbyname(socket.gethostname())
     TCP_PORT = 8000
     tcpServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -227,6 +227,7 @@ def off():
     stop = True
 
 def main():
+    freeze_support()
     app = QApplication(sys.argv)
     ex = Server()
 

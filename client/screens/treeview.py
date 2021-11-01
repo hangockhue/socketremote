@@ -41,6 +41,7 @@ class TreeViewScreen(QWidget):
         self.tree.setHeaderLabel("Folder Tree")
 
         req = QtNetwork.QNetworkRequest(QtCore.QUrl(self.url))
+        print(self.url)
 
         self.nam = QtNetwork.QNetworkAccessManager()
         self.nam.finished.connect(self.handleResponseVolumnes)
@@ -75,6 +76,7 @@ class TreeViewScreen(QWidget):
         if er == QtNetwork.QNetworkReply.NetworkError.NoError:
             bytes_string = reply.readAll()
             volumes = json.loads(str(bytes_string, 'utf-8'))['volumes']
+            print(bytes_string)
 
             pixmapi = QStyle.StandardPixmap.SP_DriveDVDIcon
             icon = self.style().standardIcon(pixmapi)

@@ -33,3 +33,10 @@ def streaming_video(socket):
         if not cv2.getWindowProperty('Receiving...', cv2.WND_PROP_VISIBLE) :
             socket.send(bytes('stop_streaming', 'utf-8'))
             break
+
+    # remove pending incoming frame data
+    while True:
+        try:
+            packet = socket.recv(4*1024)
+        except:
+            break
