@@ -11,6 +11,7 @@ from PyQt6 import QtGui
 import struct
 import pickle
 import cv2
+import ctypes
 
 
 class Screenshot(QWidget):
@@ -24,16 +25,15 @@ class Screenshot(QWidget):
 
     def initUI(self):
 
-        # user32 = ctypes.windll.user32
+        user32 = ctypes.windll.user32
 
-        # desktop_width = user32.GetSystemMetrics(0)
-        # desktop_height = user32.GetSystemMetrics(1)
+        desktop_width = user32.GetSystemMetrics(0)
+        desktop_height = user32.GetSystemMetrics(1)
 
-        # width = int(desktop_width / 3)
-        # height = int(desktop_height / 5)
+        width = int(desktop_width / 3)
+        height = int(desktop_height / 5)
 
-        # self.setWidth(width)
-        # self.setHeight(height)
+        self.resize(width, height)
 
         vbox1 = QVBoxLayout()
         self.image_label = QLabel()

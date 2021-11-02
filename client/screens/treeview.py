@@ -41,7 +41,6 @@ class TreeViewScreen(QWidget):
         self.tree.setHeaderLabel("Folder Tree")
 
         req = QtNetwork.QNetworkRequest(QtCore.QUrl(self.url))
-        print(self.url)
 
         self.nam = QtNetwork.QNetworkAccessManager()
         self.nam.finished.connect(self.handleResponseVolumnes)

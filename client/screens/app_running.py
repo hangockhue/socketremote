@@ -42,8 +42,7 @@ class AppRunning(QWidget):
         width = int(desktop_width * 0.187)
         height = int(desktop_height * 0.167)
 
-        self.setFixedWidth(width)
-        self.setFixedHeight(height)
+        self.resize(width, height)
 
         vbox1 = QVBoxLayout()
 

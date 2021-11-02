@@ -175,8 +175,7 @@ class Server(QWidget):
         width = int(desktop_width * 0.056)
         height = int(desktop_height * 0.107)
 
-        self.setFixedWidth(width)
-        self.setFixedHeight(height)
+        self.resize(width, height)
 
         self.setWindowTitle('Server')
 
