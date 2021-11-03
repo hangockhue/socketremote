@@ -13,6 +13,8 @@ from PyQt6.QtGui import QAction
 import struct
 import pickle
 import json
+import struct
+import os
 
 
 FOLDER = 0
@@ -55,13 +57,18 @@ class TreeViewScreen(QWidget):
 
         self.show()
 
-        self.menu = QMenu()
+        self.file_menu = QMenu()
         self.copy_action = QAction('Copy')
         self.copy_action.triggered.connect(self.copy_file)
         self.delete_action = QAction('Delete')
         self.delete_action.triggered.connect(self.delete_file)
-        self.menu.addAction(self.copy_action)
-        self.menu.addAction(self.delete_action)
+        self.file_menu.addAction(self.copy_action)
+        self.file_menu.addAction(self.delete_action)
+
+        self.folder_menu = QMenu()
+        self.send_file_action = QAction('Send file')
+        self.send_file_action.triggered.connect(self.send_file)
+        self.folder_menu.addAction(self.send_file_action)
 
         pixmapi = QStyle.StandardPixmap.SP_DirIcon
         self.dir_icon = self.style().standardIcon(pixmapi)
@@ -75,7 +82,6 @@ class TreeViewScreen(QWidget):
         if er == QtNetwork.QNetworkReply.NetworkError.NoError:
             bytes_string = reply.readAll()
             volumes = json.loads(str(bytes_string, 'utf-8'))['volumes']
-            print(bytes_string)
 
             pixmapi = QStyle.StandardPixmap.SP_DriveDVDIcon
             icon = self.style().standardIcon(pixmapi)
@@ -132,7 +138,10 @@ class TreeViewScreen(QWidget):
         self.chose_file = self.tree.itemAt(point)
 
         if self.chose_file.type() == FILE:
-            self.menu.exec(self.tree.mapToGlobal(point))
+            self.file_menu.exec(self.tree.mapToGlobal(point))
+
+        if self.chose_file.type() == FOLDER:
+            self.folder_menu.exec(self.tree.mapToGlobal(point))
 
     def copy_file(self):
         direction = get_direction(self.chose_file)[:-1]
@@ -181,3 +190,37 @@ class TreeViewScreen(QWidget):
         
         if data == '1':
             self.chose_file.parent().removeChild(self.chose_file)
+
+    def send_file(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            'Open file',
+            '',
+            '*'
+        )
+
+        if path:
+            file_name = os.path.basename(path)
+
+            direction = get_direction(self.chose_file)[:-1]
+
+            direction = direction + '/' + file_name
+
+            self.socket.send(bytes(f"receive_file`{direction}", 'utf-8'))
+
+            data = self.socket.recv(2048).decode("utf-8")
+
+            if data == 'start':
+                with open(path, "rb") as f:
+                    bytes_read = f.read()
+                    a = pickle.dumps(bytes_read, 0)
+                    message = struct.pack("Q", len(a)) + a
+                    self.socket.sendall(message)
+
+            data = self.socket.recv(2048).decode("utf-8")
+            
+            if data == 'end':
+                msg = QMessageBox()
+                msg.setWindowTitle("IP")
+                msg.setText("Gửi thành công")
+                msg.exec()

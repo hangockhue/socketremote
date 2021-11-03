@@ -31,6 +31,36 @@ def video_stream(conn: socket.socket, streaming: Value):
         message = struct.pack("Q", len(a)) + a
         conn.sendall(message)
 
+
+def receive_file(conn: socket.socket, path):
+    conn.send(bytes("start", "utf-8"))
+
+    data = b""
+    payload_size = struct.calcsize("Q")
+
+    while len(data) < payload_size:
+        packet = conn.recv(4*1024)
+
+        if not packet: break
+        data += packet
+        
+        packed_msg_size = data[:payload_size]
+        data = data[payload_size:]
+        msg_size = struct.unpack("Q",packed_msg_size)[0]
+        
+        while len(data) < msg_size:
+            data += conn.recv(4*1024)
+
+    frame_data = data[:msg_size]
+    data  = data[msg_size:]
+    data = pickle.loads(frame_data, fix_imports=True, encoding="bytes")
+
+    with open(path, "wb") as f:
+        f.write(data)
+
+    conn.send(bytes("end", "utf-8"))
+
+
 def connectclient(conn: socket.socket):
     global stop
     streaming = Value('b', False)
@@ -43,7 +73,7 @@ def connectclient(conn: socket.socket):
             data = conn.recv(2048)
         except Exception:
             break
-
+        
         data = data.decode("utf-8")
 
         if data == '':
@@ -114,7 +144,7 @@ def connectclient(conn: socket.socket):
             if result:
                 conn.send(bytes(result, "utf-8"))
             else:
-                conn.send(bytes("None", "utf-8"))
+                conn.send(bytes("\\none", "utf-8"))
         if data == "get_application_running":
             data_application = serverfunc.get_application_running()
             conn.sendall(bytes(str(data_application), "utf-8"))
@@ -140,6 +170,11 @@ def connectclient(conn: socket.socket):
             data = data.split("`")
             result = serverfunc.remove_file(data[1])
             conn.send(bytes(result, "utf-8"))
+        if "receive_file" in data:
+            data = data.split("`")
+            receive_file(conn, data[1])
+
+    serverfunc.listening_keyboard(False)
 
 def runserver():
     TCP_IP = socket.gethostbyname(socket.gethostname())
@@ -172,7 +207,7 @@ class Server(QWidget):
         desktop_width = user32.GetSystemMetrics(0)
         desktop_height = user32.GetSystemMetrics(1)
 
-        width = int(desktop_width * 0.056)
+        width = int(desktop_width * 0.086)
         height = int(desktop_height * 0.107)
 
         self.resize(width, height)

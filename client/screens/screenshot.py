@@ -80,7 +80,7 @@ class Screenshot(QWidget):
 
         height, width, _ = frame.shape
 
-        image = QtGui.QImage(frame, width, height, width * 3, QtGui.QImage.Format.Format_RGB888)
+        image = QtGui.QImage(frame, width, height, width * 3, QtGui.QImage.Format.Format_BGR888)
 
         self.pixmap = QtGui.QPixmap(image)
 

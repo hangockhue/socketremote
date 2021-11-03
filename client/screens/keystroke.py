@@ -69,7 +69,8 @@ class Keystroke(QWidget):
 
         data = self.socket.recv(2048).decode("utf-8")
 
-        self.textEdit.setPlainText(data)
+        if data != "\\none":
+            self.textEdit.insertPlainText(data)
 
     def delete(self):
         self.textEdit.setPlainText("")

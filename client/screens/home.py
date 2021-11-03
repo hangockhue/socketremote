@@ -115,21 +115,26 @@ class Home(QWidget):
         self.show()
 
     def connect(self):
-        
-        try:
-            self.socket.connect((self.ip_line_edit.text(), 8000))
-            self.socket.settimeout(3)
+        if self.ip_line_edit.text().strip():
+            try:
+                self.socket.connect((self.ip_line_edit.text(), 8000))
+                self.socket.settimeout(3)
+                msg = QMessageBox()
+                msg.setWindowTitle("IP")
+                msg.setText("Kết nối thành công")
+                msg.exec()
+                self.ip_line_edit.setReadOnly(True)
+                self.connected = True
+                
+            except TimeoutError:
+                msg = QMessageBox()
+                msg.setWindowTitle("IP")
+                msg.setText("Kết nối thất bại")
+                msg.exec()
+        else:
             msg = QMessageBox()
             msg.setWindowTitle("IP")
-            msg.setText("Kết nối thành công")
-            msg.exec()
-            self.ip_line_edit.setReadOnly(True)
-            self.connected = True
-            
-        except TimeoutError:
-            msg = QMessageBox()
-            msg.setWindowTitle("IP")
-            msg.setText("Kết nối thất bại")
+            msg.setText("Vui lòng nhập địa chỉ IP")
             msg.exec()
 
     def check_connnected(self):
