@@ -120,7 +120,7 @@ class AppRunning(QWidget):
 
         self.socket.send(bytes('get_application_running', 'utf-8'))
 
-        result = recv_timeout(self.socket)
+        result = recv_timeout(self.socket, 20)
 
         result = ast.literal_eval(result)
 
