@@ -19,11 +19,13 @@ def listening_keyboard(listening=True):
     global listener
 
     if listening:
-        listener = Listener(on_press=on_press)
-        listener.start()
+        if listener is None:
+            listener = Listener(on_press=on_press)
+            listener.start()
     else:
         if listener:
             listener.stop()
+            listener = None
         key_log = ''
 
 

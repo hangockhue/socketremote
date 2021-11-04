@@ -146,13 +146,20 @@ class Home(QWidget):
             return False
         return True
 
+    def reset(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.ip_line_edit.setReadOnly(False)
+        self.connected = False
+
     def shutdown(self):
         if self.check_connnected():
             self.socket.send(bytes('shutdown', 'utf-8'))
+            self.reset()
 
     def logout(self):
         if self.check_connnected():
             self.socket.send(bytes('logout', 'utf-8'))
+            self.reset()
 
     def open_process_running(self):
         if self.check_connnected():
